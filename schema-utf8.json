@@ -1,0 +1,134 @@
+﻿[
+  {
+    "table_name": "clients",
+    "column_name": "id"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "name"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "email"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "phone"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "address"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "created_at"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "user_id"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "division"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "client_code"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "is_deleted"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "contact_person"
+  },
+  {
+    "table_name": "clients",
+    "column_name": "updated_at"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "id"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "client_id"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "invoice_number"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "reference_number"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "project_name"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "invoice_date"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "due_date"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "payment_terms"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "notes"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "total_amount"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "status"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "created_at"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "division"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "subtotal"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "tax_rate"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "tax_amount"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "discount"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "amount_paid"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "balance_amount"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "is_deleted"
+  },
+  {
+    "table_name": "invoices",
+    "column_name": "updated_at"
+  }
+]

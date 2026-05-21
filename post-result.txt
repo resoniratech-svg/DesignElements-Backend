@@ -1,0 +1,1 @@
+[{"id":30,"client_id":null,"project_name":"swethasaiphaniclinic website","contract_value":"5000.00","start_date":"2026-04-05T18:30:00.000Z","end_date":"2026-04-14T18:30:00.000Z","status":"CREATED","created_at":"2026-04-06T05:12:23.688Z","manager":"prakash","description":null,"division":"service","client_name":"bhanu","uploaded_document":null}]

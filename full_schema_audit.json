@@ -1,0 +1,184 @@
+{
+  "boq_singular": [
+    {
+      "column_name": "id",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "boq_number",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "title",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text"
+    },
+    {
+      "column_name": "project_id",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "project_name",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "client_id",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "client_name",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "client_email",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "client_phone",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "items",
+      "data_type": "jsonb"
+    },
+    {
+      "column_name": "subtotal",
+      "data_type": "numeric"
+    },
+    {
+      "column_name": "tax_percentage",
+      "data_type": "numeric"
+    },
+    {
+      "column_name": "tax_amount",
+      "data_type": "numeric"
+    },
+    {
+      "column_name": "discount",
+      "data_type": "numeric"
+    },
+    {
+      "column_name": "total_amount",
+      "data_type": "numeric"
+    },
+    {
+      "column_name": "status",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "created_by",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "created_by_name",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "approved_by",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "approved_by_name",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "approved_at",
+      "data_type": "timestamp without time zone"
+    },
+    {
+      "column_name": "client_action",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "remarks",
+      "data_type": "text"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone"
+    }
+  ],
+  "boqs_plural": [
+    {
+      "column_name": "id",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "boq_number",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "project_name",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "client_name",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "client_id",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "total_amount",
+      "data_type": "numeric"
+    },
+    {
+      "column_name": "status",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "date",
+      "data_type": "date"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    }
+  ],
+  "boq_items": [
+    {
+      "column_name": "id",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "boq_id",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text"
+    },
+    {
+      "column_name": "quantity",
+      "data_type": "numeric"
+    },
+    {
+      "column_name": "unit",
+      "data_type": "character varying"
+    },
+    {
+      "column_name": "rate",
+      "data_type": "numeric"
+    },
+    {
+      "column_name": "amount",
+      "data_type": "numeric"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    }
+  ]
+}

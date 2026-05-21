@@ -1,0 +1,72 @@
+﻿[
+  {
+    "name": "Accountant manager",
+    "email": "account@erp.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "thirumala",
+    "email": "thirumala@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "srinu",
+    "email": "srinu@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "varun",
+    "email": "varun@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "vishnu",
+    "email": "vishnu@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "bunny",
+    "email": "bunny@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "prakash",
+    "email": "prakash@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "Accountant",
+    "email": "account@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "bhanu",
+    "email": "bhanu@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "vinay",
+    "email": "vinay@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "mahesh",
+    "email": "mahesh@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "John",
+    "email": "john@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "sathvika",
+    "email": "sathvika@gmail.com",
+    "role": "STAFF"
+  },
+  {
+    "name": "Admin",
+    "email": "admin@erp.com",
+    "role": "STAFF"
+  }
+]

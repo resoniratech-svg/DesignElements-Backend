@@ -1,0 +1,77 @@
+[
+  {
+    "table_name": "activity_logs"
+  },
+  {
+    "table_name": "approvals"
+  },
+  {
+    "table_name": "client_licenses"
+  },
+  {
+    "table_name": "expense_allocations"
+  },
+  {
+    "table_name": "doc_counters"
+  },
+  {
+    "table_name": "invoice_items"
+  },
+  {
+    "table_name": "internal_expenses"
+  },
+  {
+    "table_name": "clients"
+  },
+  {
+    "table_name": "payments"
+  },
+  {
+    "table_name": "projects"
+  },
+  {
+    "table_name": "ledger_entries"
+  },
+  {
+    "table_name": "notifications"
+  },
+  {
+    "table_name": "roles"
+  },
+  {
+    "table_name": "client_agreements"
+  },
+  {
+    "table_name": "project_expenses"
+  },
+  {
+    "table_name": "proposals"
+  },
+  {
+    "table_name": "proposal_items"
+  },
+  {
+    "table_name": "users"
+  },
+  {
+    "table_name": "divisions"
+  },
+  {
+    "table_name": "division_settings"
+  },
+  {
+    "table_name": "user_division_access"
+  },
+  {
+    "table_name": "boq"
+  },
+  {
+    "table_name": "boqs"
+  },
+  {
+    "table_name": "boq_items"
+  },
+  {
+    "table_name": "invoices"
+  }
+]

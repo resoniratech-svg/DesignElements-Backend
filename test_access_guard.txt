@@ -1,0 +1,54 @@
+import { AccessGuard } from "./src/services/accessGuard.service";
+
+// Mock data
+const adminUser = { id: 1, role: "ADMIN", division: "SERVICE" };
+const pmUser = { id: 2, role: "PROJECT_MANAGER", division: "TRADING" };
+const clientUser = { id: 3, role: "CLIENT", division: "CONTRACTING" };
+
+// 1. Test ADMIN Scoping
+console.log("--- Testing ADMIN Scoping ---");
+const paramsAdmin: any[] = [];
+const sqlAdmin = AccessGuard.getScopedWhere(adminUser, paramsAdmin, "p");
+console.log("SQL:", sqlAdmin);
+console.log("Params:", paramsAdmin);
+if (sqlAdmin.includes("1=1") && paramsAdmin.length === 0) {
+    console.log("✅ ADMIN: Success");
+} else {
+    console.log("❌ ADMIN: Failed");
+}
+
+// 2. Test PM Scoping
+console.log("\n--- Testing PM Scoping ---");
+const paramsPM: any[] = [];
+const sqlPM = AccessGuard.getScopedWhere(pmUser, paramsPM, "p");
+console.log("SQL:", sqlPM);
+console.log("Params:", paramsPM);
+if (sqlPM.includes("p.manager_id = $1") && sqlPM.includes("p.division = $2") && paramsPM[0] === 2 && paramsPM[1] === "TRADING") {
+    console.log("✅ PM: Success");
+} else {
+    console.log("❌ PM: Failed");
+}
+
+// 3. Test CLIENT Scoping
+console.log("\n--- Testing CLIENT Scoping ---");
+const paramsClient: any[] = [];
+const sqlClient = AccessGuard.getScopedWhere(clientUser, paramsClient, "p");
+console.log("SQL:", sqlClient);
+console.log("Params:", paramsClient);
+if (sqlClient.includes("p.client_id = $1") && paramsClient[0] === 3) {
+    console.log("✅ CLIENT: Success");
+} else {
+    console.log("❌ CLIENT: Failed");
+}
+
+// 4. Test AND Logic
+console.log("\n--- Testing AND Logic ---");
+const paramsAnd: any[] = [42]; // existing ID
+const sqlAnd = AccessGuard.getScopedAnd(pmUser, paramsAnd, "p");
+console.log("SQL:", sqlAnd);
+console.log("Params:", paramsAnd);
+if (sqlAnd.includes("AND p.manager_id = $2") && paramsAnd[1] === 2) {
+    console.log("✅ AND Logic: Success");
+} else {
+    console.log("❌ AND Logic: Failed");
+}

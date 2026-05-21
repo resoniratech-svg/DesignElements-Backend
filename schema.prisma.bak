@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Division {
+  SERVICE
+  TRADING
+  CONTRACTING
+}
+
+enum ApprovalStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  role      String   @default("USER")
+  division  Division?
+  clients   Client[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id        Int       @id @default(autoincrement())
+  name      String
+  division  Division
+  invoices  Invoice[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Invoice {
+  id             Int            @id @default(autoincrement())
+  invoiceNumber  String
+  division       Division
+  client         Client         @relation(fields: [clientId], references: [id])
+  clientId       Int
+  status         ApprovalStatus @default(DRAFT)
+  totalAmount    Decimal        @db.Decimal(10, 2)
+  payments       Payment[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([division, invoiceNumber])
+}
+
+model Quotation {
+  id              Int            @id @default(autoincrement())
+  quotationNumber String
+  division        Division
+  status          ApprovalStatus @default(DRAFT)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([division, quotationNumber])
+}
+
+model Expense {
+  id        Int            @id @default(autoincrement())
+  title     String
+  amount    Decimal        @db.Decimal(10, 2)
+  division  Division
+  status    ApprovalStatus @default(DRAFT)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  amount    Decimal  @db.Decimal(10, 2)
+  division  Division
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  invoiceId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

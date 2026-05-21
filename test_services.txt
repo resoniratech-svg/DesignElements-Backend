@@ -1,0 +1,19 @@
+const axios = require('axios');
+const jwt = require('jsonwebtoken');
+
+// Look up the secret from .env. Assuming we know where it is or use standard decoding for testing if we just use pool
+// To test backend via API, we need the valid token. Since we don't have it, we'll just test the Service directly.
+const { getCreditSummaryService, getInvoicesService } = require('./src/modules/creditControl/credit.service');
+
+async function testServices() {
+  try {
+    const summary = await getCreditSummaryService(undefined);
+    console.log("Summary Result:", summary);
+
+    const invoices = await getInvoicesService({ limit: 10, page: 1 }, undefined);
+    console.log(`Invoices count: ${invoices.invoices.length}`);
+  } catch (err) {
+    console.error("Test Error:", err);
+  }
+}
+testServices();

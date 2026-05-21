@@ -1,0 +1,1 @@
+﻿id, name, email, password_hash, role_id, client_id, created_at

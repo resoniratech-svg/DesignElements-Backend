@@ -1,0 +1,142 @@
+[
+  {
+    "column_name": "id",
+    "is_nullable": "NO",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "client_id",
+    "is_nullable": "YES",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "invoice_number",
+    "is_nullable": "NO",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "reference_number",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "project_name",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "invoice_date",
+    "is_nullable": "NO",
+    "data_type": "date"
+  },
+  {
+    "column_name": "due_date",
+    "is_nullable": "NO",
+    "data_type": "date"
+  },
+  {
+    "column_name": "payment_terms",
+    "is_nullable": "YES",
+    "data_type": "text"
+  },
+  {
+    "column_name": "notes",
+    "is_nullable": "YES",
+    "data_type": "text"
+  },
+  {
+    "column_name": "total_amount",
+    "is_nullable": "NO",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "status",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "created_at",
+    "is_nullable": "YES",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "column_name": "division",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "subtotal",
+    "is_nullable": "YES",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "tax_rate",
+    "is_nullable": "YES",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "tax_amount",
+    "is_nullable": "YES",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "discount",
+    "is_nullable": "YES",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "amount_paid",
+    "is_nullable": "YES",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "balance_amount",
+    "is_nullable": "YES",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "is_deleted",
+    "is_nullable": "YES",
+    "data_type": "boolean"
+  },
+  {
+    "column_name": "updated_at",
+    "is_nullable": "YES",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "column_name": "lpo_no",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "salesman",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "qid",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "address",
+    "is_nullable": "YES",
+    "data_type": "text"
+  },
+  {
+    "column_name": "ref_type",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "ref_no",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "approval_status",
+    "is_nullable": "YES",
+    "data_type": "character varying"
+  }
+]

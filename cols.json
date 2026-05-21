@@ -1,0 +1,98 @@
+[
+  {
+    "column_name": "id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "name",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "email",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "password_hash",
+    "data_type": "text"
+  },
+  {
+    "column_name": "role_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "client_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "column_name": "status",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "division",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "sector",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "updated_at",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "column_name": "role",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "column_name": "home_division_id",
+    "data_type": "uuid"
+  },
+  {
+    "column_name": "phone_number",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "phone",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "company_name",
+    "data_type": "text"
+  },
+  {
+    "column_name": "address",
+    "data_type": "text"
+  },
+  {
+    "column_name": "qid",
+    "data_type": "text"
+  },
+  {
+    "column_name": "cr_number",
+    "data_type": "text"
+  },
+  {
+    "column_name": "computer_card",
+    "data_type": "text"
+  },
+  {
+    "column_name": "start_date",
+    "data_type": "date"
+  },
+  {
+    "column_name": "renewal_date",
+    "data_type": "date"
+  },
+  {
+    "column_name": "contract_type",
+    "data_type": "text"
+  },
+  {
+    "column_name": "password_plain",
+    "data_type": "text"
+  }
+]

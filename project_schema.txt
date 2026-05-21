@@ -1,0 +1,54 @@
+[
+  {
+    "column_name": "id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "client_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "project_name",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "contract_value",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "start_date",
+    "data_type": "date"
+  },
+  {
+    "column_name": "end_date",
+    "data_type": "date"
+  },
+  {
+    "column_name": "status",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "column_name": "manager",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "column_name": "division",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "client_name",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "uploaded_document",
+    "data_type": "text"
+  }
+]

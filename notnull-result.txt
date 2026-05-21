@@ -1,0 +1,54 @@
+[
+  {
+    "column_name": "id",
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "client_id",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "project_name",
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "contract_value",
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "start_date",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "end_date",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "status",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "created_at",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "manager",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "description",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "division",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "client_name",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "uploaded_document",
+    "is_nullable": "YES"
+  }
+]

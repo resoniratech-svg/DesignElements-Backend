@@ -1,0 +1,61 @@
+{
+  "invoices": [
+    {
+      "id": 62,
+      "client_id": 34,
+      "invoice_number": "TRD-INV-008",
+      "client_name": "Resonira Technologies"
+    },
+    {
+      "id": 61,
+      "client_id": 34,
+      "invoice_number": "TRD-INV-007",
+      "client_name": "Resonira Technologies"
+    },
+    {
+      "id": 57,
+      "client_id": 49,
+      "invoice_number": "SER-INV-005",
+      "client_name": "Resonira Technologies"
+    },
+    {
+      "id": 56,
+      "client_id": 30,
+      "invoice_number": "CON-INV-006",
+      "client_name": "bhanu"
+    },
+    {
+      "id": 55,
+      "client_id": 34,
+      "invoice_nremove userrumber": "TRD-INV-006",
+      "client_name": "Resonira Technologies"
+    }
+  ],
+  "clients": [
+    {
+      "id": 49,
+      "name": "thirumala",
+      "role_id": 4
+    },
+    {
+      "id": 34,
+      "name": "vishnu",
+      "role_id": 4
+    },
+    {
+      "id": 30,
+      "name": "bhanu",
+      "role_id": 4
+    },
+    {
+      "id": 33,
+      "name": "vinay",
+      "role_id": 4
+    },
+    {
+      "id": 31,
+      "name": "sathvika",
+      "role_id": 4
+    }
+  ]
+}

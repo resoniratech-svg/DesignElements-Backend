@@ -1,0 +1,469 @@
+{
+  "users": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "name",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "email",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "password_hash",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "role_id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "client_id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp"
+    },
+    {
+      "column_name": "status",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "division",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "sector",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp"
+    },
+    {
+      "column_name": "role",
+      "data_type": "USER-DEFINED",
+      "udt_name": "user_role"
+    },
+    {
+      "column_name": "home_division_id",
+      "data_type": "uuid",
+      "udt_name": "uuid"
+    },
+    {
+      "column_name": "phone_number",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "phone",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "company_name",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "address",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "qid",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "cr_number",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "computer_card",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "start_date",
+      "data_type": "date",
+      "udt_name": "date"
+    },
+    {
+      "column_name": "renewal_date",
+      "data_type": "date",
+      "udt_name": "date"
+    },
+    {
+      "column_name": "contract_type",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "password_plain",
+      "data_type": "text",
+      "udt_name": "text"
+    }
+  ],
+  "clients": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "name",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "email",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "phone",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "address",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "division",
+      "data_type": "USER-DEFINED",
+      "udt_name": "division_type"
+    },
+    {
+      "column_name": "client_code",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "is_deleted",
+      "data_type": "boolean",
+      "udt_name": "bool"
+    },
+    {
+      "column_name": "contact_person",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp"
+    }
+  ],
+  "invoices": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "client_id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "invoice_number",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "reference_number",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "project_name",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "invoice_date",
+      "data_type": "date",
+      "udt_name": "date"
+    },
+    {
+      "column_name": "due_date",
+      "data_type": "date",
+      "udt_name": "date"
+    },
+    {
+      "column_name": "payment_terms",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "notes",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "total_amount",
+      "data_type": "numeric",
+      "udt_name": "numeric"
+    },
+    {
+      "column_name": "status",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp"
+    },
+    {
+      "column_name": "division",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "subtotal",
+      "data_type": "numeric",
+      "udt_name": "numeric"
+    },
+    {
+      "column_name": "tax_rate",
+      "data_type": "numeric",
+      "udt_name": "numeric"
+    },
+    {
+      "column_name": "tax_amount",
+      "data_type": "numeric",
+      "udt_name": "numeric"
+    },
+    {
+      "column_name": "discount",
+      "data_type": "numeric",
+      "udt_name": "numeric"
+    },
+    {
+      "column_name": "amount_paid",
+      "data_type": "numeric",
+      "udt_name": "numeric"
+    },
+    {
+      "column_name": "balance_amount",
+      "data_type": "numeric",
+      "udt_name": "numeric"
+    },
+    {
+      "column_name": "is_deleted",
+      "data_type": "boolean",
+      "udt_name": "bool"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp"
+    },
+    {
+      "column_name": "lpo_no",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "salesman",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "qid",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "address",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "ref_type",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "ref_no",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "approval_status",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    }
+  ],
+  "proposals": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "client_id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "proposal_number",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "project_title",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "proposal_date",
+      "data_type": "date",
+      "udt_name": "date"
+    },
+    {
+      "column_name": "valid_until",
+      "data_type": "date",
+      "udt_name": "date"
+    },
+    {
+      "column_name": "status",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "total_amount",
+      "data_type": "numeric",
+      "udt_name": "numeric"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp"
+    }
+  ],
+  "internal_expenses": [
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid"
+    },
+    {
+      "column_name": "category",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "total_amount",
+      "data_type": "numeric",
+      "udt_name": "numeric"
+    },
+    {
+      "column_name": "date",
+      "data_type": "date",
+      "udt_name": "date"
+    },
+    {
+      "column_name": "allocation_type",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "is_deleted",
+      "data_type": "boolean",
+      "udt_name": "bool"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp"
+    },
+    {
+      "column_name": "division",
+      "data_type": "USER-DEFINED",
+      "udt_name": "division_enum"
+    },
+    {
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "udt_name": "approval_status_enum"
+    }
+  ],
+  "payments": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "invoice_id",
+      "data_type": "integer",
+      "udt_name": "int4"
+    },
+    {
+      "column_name": "amount",
+      "data_type": "numeric",
+      "udt_name": "numeric"
+    },
+    {
+      "column_name": "payment_date",
+      "data_type": "date",
+      "udt_name": "date"
+    },
+    {
+      "column_name": "payment_method",
+      "data_type": "character varying",
+      "udt_name": "varchar"
+    },
+    {
+      "column_name": "notes",
+      "data_type": "text",
+      "udt_name": "text"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp"
+    },
+    {
+      "column_name": "division",
+      "data_type": "USER-DEFINED",
+      "udt_name": "division_type"
+    }
+  ]
+}

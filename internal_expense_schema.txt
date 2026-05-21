@@ -1,0 +1,74 @@
+[
+  {
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "column_name": "category",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "column_name": "total_amount",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "date",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "column_name": "allocation_type",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "approval_status",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "vendor",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "payment_method",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "tax_rate",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "tax_amount",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "reference_id",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "attachment",
+    "data_type": "text"
+  },
+  {
+    "column_name": "notes",
+    "data_type": "text"
+  },
+  {
+    "column_name": "user_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "expense_type",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "is_deleted",
+    "data_type": "boolean"
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone"
+  }
+]

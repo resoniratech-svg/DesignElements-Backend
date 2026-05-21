@@ -1,0 +1,16 @@
+﻿[
+  {
+    "constraint_name": "invoices_client_id_users_fkey",
+    "table_name": "invoices",
+    "column_name": "client_id",
+    "referenced_table": "users",
+    "referenced_column": "id"
+  },
+  {
+    "constraint_name": "invoices_manager_id_fkey",
+    "table_name": "invoices",
+    "column_name": "manager_id",
+    "referenced_table": "users",
+    "referenced_column": "id"
+  }
+]

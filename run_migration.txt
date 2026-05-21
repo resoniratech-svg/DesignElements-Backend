@@ -1,0 +1,19 @@
+import { pool } from "./src/config/db";
+
+async function run() {
+  try {
+    console.log("Migrating DB...");
+    await pool.query(`
+      ALTER TABLE internal_expenses 
+      ADD COLUMN IF NOT EXISTS user_id UUID references users(id),
+      ADD COLUMN IF NOT EXISTS expense_type VARCHAR(50);
+    `);
+    console.log("Success");
+  } catch (err: any) {
+    console.error(err.message);
+  } finally {
+    pool.end();
+  }
+}
+
+run();

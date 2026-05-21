@@ -1,0 +1,1 @@
+﻿src/config/migrations/run_boq_migration.ts(1,22): error TS2307: Cannot find module '../config/db' or its corresponding type declarations.
