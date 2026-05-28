@@ -56,6 +56,24 @@ export const createBOQ = async (req: any, res: Response) => {
         const totals = calculateBOQTotals(items);
         console.log("CALCULATED TOTALS:", totals);
 
+        // ✅ mapping: Ensure client_id points to a record in the 'users' table
+        let target_user_id = client_id ? Number(client_id) : null;
+        if (target_user_id) {
+            const userRoleCheck = await pool.query(
+                `SELECT id FROM users WHERE id = $1 AND role_id = (SELECT id FROM roles WHERE name = 'CLIENT')`,
+                [target_user_id]
+            );
+
+            if (userRoleCheck.rows.length === 0) {
+                // If not a direct user ID, check if it's a client ID from the 'clients' table
+                const clientMap = await pool.query(`SELECT user_id FROM clients WHERE id = $1`, [target_user_id]);
+                if (clientMap.rows.length > 0 && clientMap.rows[0].user_id) {
+                    target_user_id = clientMap.rows[0].user_id;
+                    console.log(`[BOQ_FIX] Mapped Client ID ${client_id} to User ID ${target_user_id}`);
+                }
+            }
+        }
+
         // Insert BOQ into boqs table only (storing items as JSON)
         const result = await pool.query(
             `INSERT INTO boqs 
@@ -66,7 +84,7 @@ export const createBOQ = async (req: any, res: Response) => {
                 final_boq,
                 project_name,
                 client_name,
-                client_id || null,
+                target_user_id || null,
                 totals.subtotal,
                 totals.tax_percentage,
                 totals.tax_amount,
@@ -112,6 +130,24 @@ export const updateBOQ = async (req: any, res: Response) => {
 
         const totals = calculateBOQTotals(finalItems);
 
+        // ✅ mapping: Ensure client_id points to a record in the 'users' table
+        let target_user_id = client_id !== undefined ? (client_id ? Number(client_id) : null) : undefined;
+        if (target_user_id) {
+            const userRoleCheck = await pool.query(
+                `SELECT id FROM users WHERE id = $1 AND role_id = (SELECT id FROM roles WHERE name = 'CLIENT')`,
+                [target_user_id]
+            );
+
+            if (userRoleCheck.rows.length === 0) {
+                // If not a direct user ID, check if it's a client ID from the 'clients' table
+                const clientMap = await pool.query(`SELECT user_id FROM clients WHERE id = $1`, [target_user_id]);
+                if (clientMap.rows.length > 0 && clientMap.rows[0].user_id) {
+                    target_user_id = clientMap.rows[0].user_id;
+                    console.log(`[BOQ_FIX] Mapped Client ID ${client_id} to User ID ${target_user_id}`);
+                }
+            }
+        }
+
         const result = await pool.query(
             `UPDATE boqs 
             SET project_name = COALESCE($1, project_name),
@@ -132,7 +168,7 @@ WHERE id = $13
             [
                 project_name,
                 client_name,
-                client_id,
+                target_user_id !== undefined ? target_user_id : null,
                 totals.subtotal,
                 totals.tax_percentage,
                 totals.tax_amount,
