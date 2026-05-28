@@ -3,6 +3,7 @@ dotenv.config();
 
 import app from "./app";
 import { pool } from "./config/db";
+import { runGhostCleanup } from "./services/ghostCleanup";
 
 // ==============================
 // DB CONNECTION CHECK
@@ -11,6 +12,8 @@ pool.query("SELECT NOW()")
   .then(async (res) => {
     console.log("✅ [DB CONNECTION SUCCESS] Database Connected Successfully - Testing Auto Build");
     console.log("🚀 [TIMESTAMP]", new Date().toISOString());
+    // Safe startup clean-up for legacy ghost accounts (prakash@gmail.com / madhu@gmail.com) on VPS redeployments
+    await runGhostCleanup(pool);
   })
   .catch(err => console.error("❌ [DB ERROR]:", err));
 
