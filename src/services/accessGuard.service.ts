@@ -34,7 +34,7 @@ export class AccessGuard {
       // BOQs (b) use 'sector'
       const sectorField = (tableAlias === "b" || tableAlias === "boq") ? "sector" : "division";
 
-      return `WHERE (${prefix}manager_id = ${managerParam} OR UPPER(${prefix}${sectorField}) = UPPER(${divisionParam}))`;
+      return `WHERE (${prefix}manager_id = ${managerParam} OR (${prefix}manager_id IS NULL AND UPPER(${prefix}${sectorField}) = UPPER(${divisionParam})))`;
     }
 
     // CLIENT sees their own items
