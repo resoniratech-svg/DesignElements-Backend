@@ -91,7 +91,9 @@ export const createUser = async (req: Request, res: Response) => {
       [
         name, email, hashedPassword, phone, role_id, normalizedSector, normalizedDivision,
         company_name, address, qid, cr_number, computer_card,
-        start_date, renewal_date, contract_type, password,
+        start_date && start_date.trim() !== "" ? start_date : null,
+        renewal_date && renewal_date.trim() !== "" ? renewal_date : null,
+        contract_type, password,
         qid_doc_url, cr_doc_url, computer_card_doc_url, contract_doc_url
       ]
     );

@@ -227,7 +227,11 @@ export const updateClientService = async (clientId: number, data: any) => {
     for (const [col, val] of Object.entries(mapping)) {
       if (val !== undefined) {
         userFields.push(`${col} = $${idx++}`);
-        userParams.push(val);
+        let mappedVal: any = val;
+        if ((col === 'start_date' || col === 'renewal_date') && typeof val === 'string' && val.trim() === '') {
+          mappedVal = null;
+        }
+        userParams.push(mappedVal);
       }
     }
 
