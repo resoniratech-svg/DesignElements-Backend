@@ -55,7 +55,7 @@ app.use(helmet({
 app.use(morgan("dev"));
 
 // Serve uploaded files statically
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // ✅ Global Request Logger for Debugging
 app.use((req, res, next) => {
