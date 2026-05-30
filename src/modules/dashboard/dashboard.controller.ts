@@ -33,7 +33,7 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
 
     // 1. Receivables (Unpaid Invoices)
     const receivablesRes = await runQuery("Receivables", 
-      `SELECT COALESCE(SUM(total_amount), 0) as total FROM invoices WHERE balance_amount > 0${divisionFilter}`,
+      `SELECT COALESCE(SUM(balance_amount), 0) as total FROM invoices WHERE UPPER(status::TEXT) != 'PAID'${divisionFilter}`,
       params
     );
 
