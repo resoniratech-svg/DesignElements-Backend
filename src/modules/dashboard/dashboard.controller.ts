@@ -39,7 +39,7 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
 
     // 2. Payables (Internal Expenses)
     const payablesRes = await runQuery("Payables",
-      `SELECT COALESCE(SUM(total_amount), 0) as total FROM internal_expenses WHERE is_deleted = false AND approval_status::TEXT != 'PAID'${payablesDivisionFilter}`,
+      `SELECT COALESCE(SUM(total_amount), 0) as total FROM internal_expenses WHERE is_deleted = false AND UPPER(approval_status::TEXT) = 'APPROVED'${payablesDivisionFilter}`,
       params
     );
 
