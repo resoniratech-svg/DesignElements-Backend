@@ -46,12 +46,12 @@ export const getInvoicesService = async (filters: any, divisionId?: string) => {
   }
 
   if (status) {
-    if (status.toUpperCase() === 'PENDING') {
-      query += ` AND i.balance_amount > 0`;
+    if (status.toUpperCase() === 'PAID') {
+      query += ` AND UPPER(i.status) = 'PAID'`;
+    } else if (status.toUpperCase() === 'UNPAID' || status.toUpperCase() === 'PENDING') {
+      query += ` AND UPPER(i.status) = 'UNPAID'`;
     } else if (status.toUpperCase() === 'DUE') {
-      query += ` AND i.balance_amount > 0 AND i.due_date < CURRENT_DATE`;
-    } else if (status.toUpperCase() === 'PAID') {
-      query += ` AND i.balance_amount = 0`;
+      query += ` AND UPPER(i.status) = 'DUE'`;
     } else {
       params.push(status);
       query += ` AND UPPER(i.status) = $${params.length}`;
