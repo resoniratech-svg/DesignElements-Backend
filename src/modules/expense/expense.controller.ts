@@ -250,76 +250,54 @@ export const updateExpense = async (req: any, res: Response) => {
       return error(res, "Expense not found", 404);
     }
 
-    // update main
-    await client.query(
-      `UPDATE internal_expenses
-   SET category = COALESCE($1, category),
+    // Build update parameters dynamically
+    const fieldsToUpdate: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
 
-       description = COALESCE($2, description),
+    const addField = (fieldName: string, value: any) => {
+      fieldsToUpdate.push(`${fieldName} = $${paramIndex}`);
+      values.push(value);
+      paramIndex++;
+    };
 
-       total_amount = COALESCE($3, total_amount),
+    if (category !== undefined) addField("category", category || null);
+    if (description !== undefined) addField("description", description || null);
+    if (totalAmount !== undefined) addField("total_amount", totalAmount !== null ? Number(totalAmount) : null);
+    if (date !== undefined) addField("date", date || null);
+    if (allocationType !== undefined) addField("allocation_type", allocationType || null);
+    if (vendor !== undefined) addField("vendor", vendor || null);
+    if (paymentMethod !== undefined) addField("payment_method", paymentMethod || null);
+    if (taxRate !== undefined) addField("tax_rate", taxRate !== null ? Number(taxRate) : 0);
+    if (taxAmount !== undefined) addField("tax_amount", taxAmount !== null ? Number(taxAmount) : 0);
+    if (referenceId !== undefined) addField("reference_id", referenceId || null);
+    if (attachment !== undefined) addField("attachment", attachment || null);
+    if (notes !== undefined) addField("notes", notes || null);
+    if (approval_status !== undefined) addField("approval_status", approval_status || null);
 
-       date = COALESCE($4, date),
+    if (fieldsToUpdate.length > 0) {
+      values.push(expenseId);
+      const query = `
+        UPDATE internal_expenses
+        SET ${fieldsToUpdate.join(", ")}
+        WHERE id = $${paramIndex}
+      `;
+      await client.query(query, values);
+    }
 
-       allocation_type = COALESCE($5, allocation_type),
-
-       vendor = COALESCE($6, vendor),
-
-       payment_method = COALESCE($7, payment_method),
-
-       tax_rate = COALESCE($8, tax_rate),
-
-       tax_amount = COALESCE($9, tax_amount),
-
-       reference_id = COALESCE($10, reference_id),
-
-       attachment = COALESCE($11, attachment),
-
-       notes = COALESCE($12, notes),
-
-       approval_status = COALESCE($13, approval_status)
-
-   WHERE id = $14`,
-      [
-        category,
-
-        description,
-
-        totalAmount,
-
-        date,
-
-        allocationType,
-
-        vendor,
-
-        paymentMethod,
-
-        taxRate,
-
-        taxAmount,
-
-        referenceId,
-
-        attachment,
-
-        notes,
-
-        approval_status,
-
-        expenseId
-      ]
-    );
     // delete old allocations
     await client.query(
       `DELETE FROM expense_allocations WHERE expense_id = $1`,
       [expenseId]
     );
 
+    const currentTotalAmount = totalAmount !== undefined ? Number(totalAmount) : Number(check.rows[0].total_amount);
+    const currentAllocationType = allocationType !== undefined ? allocationType : check.rows[0].allocation_type;
+
     // reinsert allocations
-    if (allocationType === "SMART") {
+    if (currentAllocationType === "SMART") {
       for (const alloc of allocations) {
-        const amount = (alloc.percentage / 100) * totalAmount;
+        const amount = (alloc.percentage / 100) * currentTotalAmount;
 
         await client.query(
           `INSERT INTO expense_allocations
@@ -329,11 +307,17 @@ export const updateExpense = async (req: any, res: Response) => {
         );
       }
     } else {
+      const existingAlloc = await client.query(
+        `SELECT division FROM expense_allocations WHERE expense_id = $1 LIMIT 1`,
+        [expenseId]
+      );
+      const currentDivision = division !== undefined ? division : (existingAlloc.rows[0]?.division || 'CONTRACTING');
+
       await client.query(
         `INSERT INTO expense_allocations
         (expense_id, division, percentage, amount)
         VALUES ($1,$2,100,$3)`,
-        [expenseId, division, totalAmount]
+        [expenseId, currentDivision, currentTotalAmount]
       );
     }
 

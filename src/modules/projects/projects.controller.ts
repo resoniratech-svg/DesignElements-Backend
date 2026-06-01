@@ -246,43 +246,53 @@ export const updateProject = async (req: Request, res: Response) => {
       [id]
     );
 
+    if (pmCheck.rows.length === 0) {
+      return error(res, "Project not found", 404);
+    }
+
     // Security: PMs can only update their own projects
     if (req.user && req.user.role === 'PROJECT_MANAGER' && pmCheck.rows[0]?.manager_id !== req.user.id) {
       return error(res, "Unauthorized to update this project", 403);
     }
 
-    const result = await pool.query(
-      `UPDATE projects SET
-        project_name = COALESCE($1, project_name),
-        client_name = COALESCE($2, client_name),
-        client_id = COALESCE($3, client_id),
-        contract_value = COALESCE($4, contract_value),
-        start_date = COALESCE($5, start_date),
-        end_date = COALESCE($6, end_date),
-        manager = COALESCE($7, manager),
-        description = COALESCE($8, description),
-        division = COALESCE($9, division),
-        status = COALESCE($10, status),
-        uploaded_document = COALESCE($11, uploaded_document),
-        manager_id = COALESCE($12, manager_id)
-      WHERE id = $13
-      RETURNING *`,
-      [
-        project_name || null,
-        client_name || null,
-        target_user_id !== undefined ? target_user_id : null,
-        contract_value || null,
-        start_date || null,
-        end_date || null,
-        manager || null,
-        description || null,
-        division || null,
-        status || null,
-        uploaded_document || null,
-        manager_id || null,
-        id
-      ]
-    );
+    // Build update parameters and query dynamically
+    const fieldsToUpdate: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    const addField = (fieldName: string, value: any) => {
+      fieldsToUpdate.push(`${fieldName} = $${paramIndex}`);
+      values.push(value);
+      paramIndex++;
+    };
+
+    if (project_name !== undefined) addField("project_name", project_name || null);
+    if (client_name !== undefined) addField("client_name", client_name || null);
+    if (client_id !== undefined) addField("client_id", target_user_id);
+    if (contract_value !== undefined) addField("contract_value", contract_value !== null ? Number(contract_value) : null);
+    if (start_date !== undefined) addField("start_date", start_date || null);
+    if (end_date !== undefined) addField("end_date", end_date || null);
+    if (manager !== undefined) addField("manager", manager || null);
+    if (manager_id !== undefined) addField("manager_id", manager_id ? Number(manager_id) : null);
+    if (description !== undefined) addField("description", description || null);
+    if (division !== undefined) addField("division", division || null);
+    if (status !== undefined) addField("status", status || null);
+    if (uploaded_document !== undefined) addField("uploaded_document", uploaded_document || null);
+
+    if (fieldsToUpdate.length === 0) {
+      const currentProject = await pool.query(`SELECT * FROM projects WHERE id = $1`, [id]);
+      return success(res, "No changes specified", currentProject.rows[0]);
+    }
+
+    values.push(id);
+    const query = `
+      UPDATE projects SET
+        ${fieldsToUpdate.join(", ")}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
       return error(res, "Project not found", 404);
