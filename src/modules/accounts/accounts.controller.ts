@@ -24,7 +24,7 @@ export const getAccountsDashboardStats = async (req: Request, res: Response) => 
         // Using common statuses used in our app for consistency
         const payablesRes = await pool.query(
             `SELECT COALESCE(SUM(total_amount), 0) as total FROM internal_expenses 
-             WHERE approval_status != 'PAID' AND approval_status != 'REJECTED'${divisionFilter}`,
+             WHERE is_deleted = false AND approval_status != 'PAID' AND approval_status != 'REJECTED'${divisionFilter}`,
             params
         );
 

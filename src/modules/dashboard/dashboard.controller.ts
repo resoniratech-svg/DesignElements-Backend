@@ -173,7 +173,7 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
         SELECT ea.division, COALESCE(SUM(ea.amount), 0) as expense
         FROM internal_expenses e
         JOIN expense_allocations ea ON ea.expense_id = e.id
-        WHERE UPPER(e.approval_status::TEXT) = 'APPROVED'
+        WHERE e.is_deleted = false AND UPPER(e.approval_status::TEXT) = 'APPROVED'
         GROUP BY ea.division
       ),
       sector_projects AS (
@@ -230,7 +230,7 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
           DATE_TRUNC('month', date) as sort_month,
           SUM(total_amount) as expense
         FROM internal_expenses
-        WHERE UPPER(approval_status::TEXT) = 'APPROVED'
+        WHERE is_deleted = false AND UPPER(approval_status::TEXT) = 'APPROVED'
         ${payablesDivisionFilter.replace('internal_expenses.id', 'id')}
         GROUP BY month, sort_month
       )
