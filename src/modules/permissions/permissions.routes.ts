@@ -7,5 +7,6 @@ const router = Router();
 
 router.get("/", authMiddleware, getPermissions);
 router.put("/", authMiddleware, checkRole(["SUPER_ADMIN"]), savePermissions);
+router.post("/", authMiddleware, checkRole(["SUPER_ADMIN"]), savePermissions);
 
 export default router;

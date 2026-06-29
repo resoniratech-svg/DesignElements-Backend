@@ -19,8 +19,13 @@ pool.query("SELECT NOW()")
     await pool.query(`
       CREATE TABLE IF NOT EXISTS role_permissions (
         section_name VARCHAR(100) PRIMARY KEY,
-        roles TEXT[] NOT NULL
+        roles TEXT[] NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+    // Ensure updated_at column is added to legacy databases
+    await pool.query(`
+      ALTER TABLE role_permissions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
 
     // Seed default permissions if table is empty

@@ -525,7 +525,8 @@ const initializeDatabase = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS role_permissions (
         section_name VARCHAR(100) PRIMARY KEY,
-        roles TEXT[] NOT NULL
+        roles TEXT[] NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
