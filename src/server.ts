@@ -14,6 +14,40 @@ pool.query("SELECT NOW()")
     console.log("🚀 [TIMESTAMP]", new Date().toISOString());
     // Safe startup clean-up for legacy ghost accounts (prakash@gmail.com / madhu@gmail.com) on VPS redeployments
     await runGhostCleanup(pool);
+
+    // Ensure role_permissions table exists in database
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS role_permissions (
+        section_name VARCHAR(100) PRIMARY KEY,
+        roles TEXT[] NOT NULL
+      );
+    `);
+
+    // Seed default permissions if table is empty
+    const permCheck = await pool.query("SELECT COUNT(*) FROM role_permissions");
+    if (Number(permCheck.rows[0].count) === 0) {
+      const defaultPermissions = [
+        { section: "Overview", roles: ["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER"] },
+        { section: "Client Management", roles: ["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER"] },
+        { section: "Projects", roles: ["SUPER_ADMIN", "PROJECT_MANAGER"] },
+        { section: "Estimations", roles: ["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER"] },
+        { section: "Accounting", roles: ["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER"] },
+        { section: "Employee Management", roles: ["SUPER_ADMIN", "PROJECT_MANAGER", "ACCOUNTS"] },
+        { section: "Reports", roles: ["SUPER_ADMIN", "ACCOUNTS"] },
+        { section: "Marketing", roles: ["SUPER_ADMIN", "PROJECT_MANAGER", "ACCOUNTS"] },
+        { section: "User Management", roles: ["SUPER_ADMIN"] }
+      ];
+
+      for (const perm of defaultPermissions) {
+        await pool.query(
+          `INSERT INTO role_permissions (section_name, roles) 
+           VALUES ($1, $2) 
+           ON CONFLICT (section_name) DO NOTHING`,
+          [perm.section, perm.roles]
+        );
+      }
+      console.log("🌱 [DB INFO] Default permissions seeded successfully.");
+    }
   })
   .catch(err => console.error("❌ [DB ERROR]:", err));
 
