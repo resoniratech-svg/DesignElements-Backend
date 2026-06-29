@@ -521,6 +521,14 @@ const initializeDatabase = async () => {
       );
     `);
 
+    // 31. Role Permissions Table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS role_permissions (
+        section_name VARCHAR(100) PRIMARY KEY,
+        roles TEXT[] NOT NULL
+      );
+    `);
+
     // ==========================================
     // SEEDING
     // ==========================================
@@ -532,6 +540,28 @@ const initializeDatabase = async () => {
       await client.query(
         "INSERT INTO roles (name) VALUES ($1) ON CONFLICT (name) DO NOTHING",
         [roleName]
+      );
+    }
+
+    // Seed Default Permissions
+    const defaultPermissions = [
+      { section: "Overview", roles: ["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER"] },
+      { section: "Client Management", roles: ["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER"] },
+      { section: "Projects", roles: ["SUPER_ADMIN", "PROJECT_MANAGER"] },
+      { section: "Estimations", roles: ["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER"] },
+      { section: "Accounting", roles: ["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER"] },
+      { section: "Employee Management", roles: ["SUPER_ADMIN", "PROJECT_MANAGER", "ACCOUNTS"] },
+      { section: "Reports", roles: ["SUPER_ADMIN", "ACCOUNTS"] },
+      { section: "Marketing", roles: ["SUPER_ADMIN", "PROJECT_MANAGER", "ACCOUNTS"] },
+      { section: "User Management", roles: ["SUPER_ADMIN"] }
+    ];
+
+    for (const perm of defaultPermissions) {
+      await client.query(
+        `INSERT INTO role_permissions (section_name, roles) 
+         VALUES ($1, $2) 
+         ON CONFLICT (section_name) DO NOTHING`,
+        [perm.section, perm.roles]
       );
     }
 
