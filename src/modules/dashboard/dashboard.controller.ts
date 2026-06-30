@@ -170,7 +170,7 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
           SELECT division::TEXT FROM projects
           UNION
           SELECT ea.division::TEXT FROM internal_expenses e JOIN expense_allocations ea ON ea.expense_id = e.id
-        ) d(division) WHERE division IS NOT NULL
+        ) d(division) WHERE division IS NOT NULL AND UPPER(division) != 'SERVICE'
       ),
       sector_revenue AS (
         SELECT division, COALESCE(SUM(total_amount), 0) as revenue
