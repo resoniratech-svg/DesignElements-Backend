@@ -20,21 +20,11 @@ export class AccessGuard {
       return "WHERE 1=1";
     }
 
-    // PROJECT_MANAGER sees their own projects/items within their division or sector
+    // PROJECT_MANAGER sees only their own assigned projects/items
     if (user.role === "PROJECT_MANAGER") {
       params.push(user.id);
       const managerParam = `$${params.length}`;
-      
-      const divisionOrSector = user.sector || user.division;
-      params.push(divisionOrSector);
-      const divisionParam = `$${params.length}`;
-
-      // ✅ Fix: Generic column detection based on common table aliases
-      // Projects (p), Invoices (i), Quotations (q) use 'division'
-      // BOQs (b) use 'sector'
-      const sectorField = (tableAlias === "b" || tableAlias === "boq") ? "sector" : "division";
-
-      return `WHERE (${prefix}manager_id = ${managerParam} OR (${prefix}manager_id IS NULL AND UPPER(${prefix}${sectorField}) = UPPER(${divisionParam})))`;
+      return `WHERE ${prefix}manager_id = ${managerParam}`;
     }
 
     // CLIENT sees their own items
