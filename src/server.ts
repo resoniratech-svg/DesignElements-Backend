@@ -28,6 +28,24 @@ pool.query("SELECT NOW()")
       ALTER TABLE role_permissions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
 
+    // Ensure boqs table has all required columns
+    try {
+      await pool.query(`
+        ALTER TABLE boqs ADD COLUMN IF NOT EXISTS client_name VARCHAR(255);
+        ALTER TABLE boqs ADD COLUMN IF NOT EXISTS subtotal DECIMAL(15, 2) DEFAULT 0;
+        ALTER TABLE boqs ADD COLUMN IF NOT EXISTS tax_percentage DECIMAL(5, 2) DEFAULT 0;
+        ALTER TABLE boqs ADD COLUMN IF NOT EXISTS tax_amount DECIMAL(15, 2) DEFAULT 0;
+        ALTER TABLE boqs ADD COLUMN IF NOT EXISTS discount DECIMAL(15, 2) DEFAULT 0;
+        ALTER TABLE boqs ADD COLUMN IF NOT EXISTS items JSONB;
+        ALTER TABLE boqs ADD COLUMN IF NOT EXISTS title VARCHAR(255);
+        ALTER TABLE boqs ADD COLUMN IF NOT EXISTS sector VARCHAR(50);
+        ALTER TABLE boqs ADD COLUMN IF NOT EXISTS date DATE DEFAULT CURRENT_DATE;
+      `);
+      console.log("🌱 [DB INFO] BOQs table columns verified/migrated successfully.");
+    } catch (boqErr) {
+      console.warn("⚠️ [DB WARNING] Failed to alter boqs table (it may not exist yet):", boqErr);
+    }
+
     // Seed default permissions if table is empty
     const permCheck = await pool.query("SELECT COUNT(*) FROM role_permissions");
     if (Number(permCheck.rows[0].count) === 0) {
