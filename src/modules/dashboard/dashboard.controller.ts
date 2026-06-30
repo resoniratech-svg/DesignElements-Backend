@@ -165,12 +165,12 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
     const divisionPerformanceRes = await runQuery("DivisionPerformance", `
       WITH divisions_list AS (
         SELECT DISTINCT division FROM (
-          SELECT division FROM invoices
+          SELECT division::TEXT FROM invoices
           UNION
-          SELECT division FROM projects
+          SELECT division::TEXT FROM projects
           UNION
-          SELECT ea.division FROM internal_expenses e JOIN expense_allocations ea ON ea.expense_id = e.id
-        ) d WHERE division IS NOT NULL
+          SELECT ea.division::TEXT FROM internal_expenses e JOIN expense_allocations ea ON ea.expense_id = e.id
+        ) d(division) WHERE division IS NOT NULL
       ),
       sector_revenue AS (
         SELECT division, COALESCE(SUM(total_amount), 0) as revenue
