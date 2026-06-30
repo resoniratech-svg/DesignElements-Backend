@@ -69,6 +69,7 @@ const initializeDatabase = async () => {
         contract_doc_url TEXT,
         client_id INTEGER,
         is_deleted BOOLEAN DEFAULT false,
+        status VARCHAR(20) DEFAULT 'active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

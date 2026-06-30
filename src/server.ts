@@ -112,6 +112,16 @@ pool.query("SELECT NOW()")
       console.warn("⚠️ [DB WARNING] Failed to alter internal_expenses table:", expErr);
     }
 
+    // Ensure users table has all required columns
+    try {
+      await pool.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active';
+      `);
+      console.log("🌱 [DB INFO] Users table columns verified/migrated successfully.");
+    } catch (userErr) {
+      console.warn("⚠️ [DB WARNING] Failed to alter users table:", userErr);
+    }
+
     // Seed default permissions if table is empty
     const permCheck = await pool.query("SELECT COUNT(*) FROM role_permissions");
     if (Number(permCheck.rows[0].count) === 0) {
