@@ -181,7 +181,7 @@ const initializeDatabase = async () => {
         boq_number VARCHAR(50) UNIQUE,
         project_name VARCHAR(255),
         client_name VARCHAR(255),
-        client_id INTEGER REFERENCES clients(id),
+        client_id INTEGER REFERENCES users(id),
         manager_id INTEGER REFERENCES users(id),
         division VARCHAR(50),
         status VARCHAR(50) DEFAULT 'DRAFT',

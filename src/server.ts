@@ -46,6 +46,19 @@ pool.query("SELECT NOW()")
       console.warn("⚠️ [DB WARNING] Failed to alter boqs table (it may not exist yet):", boqErr);
     }
 
+    // Ensure boqs table foreign key constraint points to users table instead of clients table
+    try {
+      await pool.query(`
+        ALTER TABLE boqs DROP CONSTRAINT IF EXISTS boqs_client_id_fkey;
+      `);
+      await pool.query(`
+        ALTER TABLE boqs ADD CONSTRAINT boqs_client_id_fkey FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL;
+      `);
+      console.log("🌱 [DB INFO] BOQs foreign key constraint aligned with users table successfully.");
+    } catch (fkErr) {
+      console.warn("⚠️ [DB WARNING] Failed to align BOQs foreign key constraint:", fkErr);
+    }
+
     // Ensure doc_counters table exists and is seeded
     try {
       await pool.query(`
