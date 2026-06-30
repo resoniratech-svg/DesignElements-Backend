@@ -163,7 +163,16 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
 
     // 11. Division Performance
     const divisionPerformanceRes = await runQuery("DivisionPerformance", `
-      WITH sector_revenue AS (
+      WITH divisions_list AS (
+        SELECT DISTINCT division FROM (
+          SELECT division FROM invoices
+          UNION
+          SELECT division FROM projects
+          UNION
+          SELECT ea.division FROM internal_expenses e JOIN expense_allocations ea ON ea.expense_id = e.id
+        ) d WHERE division IS NOT NULL
+      ),
+      sector_revenue AS (
         SELECT division, COALESCE(SUM(total_amount), 0) as revenue
         FROM invoices
         WHERE balance_amount = 0
@@ -183,13 +192,14 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
         GROUP BY division
       )
       SELECT 
-        r.division, 
-        r.revenue, 
+        d.division, 
+        COALESCE(r.revenue, 0) as revenue, 
         COALESCE(e.expense, 0) as expense,
         COALESCE(p.count, 0) as projects
-      FROM sector_revenue r
-      LEFT JOIN sector_expenses e ON UPPER(r.division::TEXT) = UPPER(e.division::TEXT)
-      LEFT JOIN sector_projects p ON UPPER(r.division::TEXT) = UPPER(p.division::TEXT)
+      FROM divisions_list d
+      LEFT JOIN sector_revenue r ON UPPER(d.division::TEXT) = UPPER(r.division::TEXT)
+      LEFT JOIN sector_expenses e ON UPPER(d.division::TEXT) = UPPER(e.division::TEXT)
+      LEFT JOIN sector_projects p ON UPPER(d.division::TEXT) = UPPER(p.division::TEXT)
     `, []);
 
     const divisionPerformance = divisionPerformanceRes.rows.map(row => ({
