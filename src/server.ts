@@ -46,6 +46,41 @@ pool.query("SELECT NOW()")
       console.warn("⚠️ [DB WARNING] Failed to alter boqs table (it may not exist yet):", boqErr);
     }
 
+    // Ensure doc_counters table exists and is seeded
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS doc_counters (
+          id SERIAL PRIMARY KEY,
+          division VARCHAR(50) NOT NULL,
+          doc_type VARCHAR(50) NOT NULL,
+          last_number INTEGER NOT NULL DEFAULT 0,
+          year INTEGER,
+          UNIQUE(division, doc_type)
+        );
+      `);
+      
+      const defaultCounters = [
+        { division: 'SERVICE', doc_type: 'INV', last_number: 0 },
+        { division: 'TRADING', doc_type: 'INV', last_number: 0 },
+        { division: 'CONTRACTING', doc_type: 'INV', last_number: 0 },
+        { division: 'SERVICE', doc_type: 'QUO', last_number: 0 },
+        { division: 'TRADING', doc_type: 'QUO', last_number: 0 },
+        { division: 'CONTRACTING', doc_type: 'QUO', last_number: 0 }
+      ];
+
+      for (const counter of defaultCounters) {
+        await pool.query(
+          `INSERT INTO doc_counters (division, doc_type, last_number) 
+           VALUES ($1, $2, $3) 
+           ON CONFLICT (division, doc_type) DO NOTHING`,
+          [counter.division, counter.doc_type, counter.last_number]
+        );
+      }
+      console.log("🌱 [DB INFO] doc_counters table verified/initialized successfully.");
+    } catch (countErr) {
+      console.error("❌ [DB ERROR] Failed to initialize doc_counters table:", countErr);
+    }
+
     // Seed default permissions if table is empty
     const permCheck = await pool.query("SELECT COUNT(*) FROM role_permissions");
     if (Number(permCheck.rows[0].count) === 0) {

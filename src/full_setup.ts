@@ -539,6 +539,18 @@ const initializeDatabase = async () => {
       );
     `);
 
+    // 32. Document Counters Table (for sequential document numbers)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS doc_counters (
+        id SERIAL PRIMARY KEY,
+        division VARCHAR(50) NOT NULL,
+        doc_type VARCHAR(50) NOT NULL,
+        last_number INTEGER NOT NULL DEFAULT 0,
+        year INTEGER,
+        UNIQUE(division, doc_type)
+      );
+    `);
+
     // ==========================================
     // SEEDING
     // ==========================================
@@ -572,6 +584,25 @@ const initializeDatabase = async () => {
          VALUES ($1, $2) 
          ON CONFLICT (section_name) DO NOTHING`,
         [perm.section, perm.roles]
+      );
+    }
+
+    // Seed Default Document Counters
+    const defaultCounters = [
+      { division: 'SERVICE', doc_type: 'INV', last_number: 0 },
+      { division: 'TRADING', doc_type: 'INV', last_number: 0 },
+      { division: 'CONTRACTING', doc_type: 'INV', last_number: 0 },
+      { division: 'SERVICE', doc_type: 'QUO', last_number: 0 },
+      { division: 'TRADING', doc_type: 'QUO', last_number: 0 },
+      { division: 'CONTRACTING', doc_type: 'QUO', last_number: 0 }
+    ];
+
+    for (const counter of defaultCounters) {
+      await client.query(
+        `INSERT INTO doc_counters (division, doc_type, last_number) 
+         VALUES ($1, $2, $3) 
+         ON CONFLICT (division, doc_type) DO NOTHING`,
+        [counter.division, counter.doc_type, counter.last_number]
       );
     }
 
