@@ -249,6 +249,7 @@ const initializeDatabase = async () => {
         dn_prepared_by VARCHAR(100),
         dn_checked_by VARCHAR(100),
         dn_receiver_name VARCHAR(100),
+        invoice_type VARCHAR(50) DEFAULT 'Standard',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

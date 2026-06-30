@@ -81,6 +81,37 @@ pool.query("SELECT NOW()")
       console.error("❌ [DB ERROR] Failed to initialize doc_counters table:", countErr);
     }
 
+    // Ensure invoices table has all required columns
+    try {
+      await pool.query(`
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_type VARCHAR(50) DEFAULT 'Standard';
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS ref_no VARCHAR(100);
+      `);
+      console.log("🌱 [DB INFO] Invoices table columns verified/migrated successfully.");
+    } catch (invErr) {
+      console.warn("⚠️ [DB WARNING] Failed to alter invoices table:", invErr);
+    }
+
+    // Ensure projects table has all required columns
+    try {
+      await pool.query(`
+        ALTER TABLE projects ADD COLUMN IF NOT EXISTS client_name VARCHAR(255);
+      `);
+      console.log("🌱 [DB INFO] Projects table columns verified/migrated successfully.");
+    } catch (projErr) {
+      console.warn("⚠️ [DB WARNING] Failed to alter projects table:", projErr);
+    }
+
+    // Ensure internal_expenses table has all required columns
+    try {
+      await pool.query(`
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS is_central BOOLEAN DEFAULT FALSE;
+      `);
+      console.log("🌱 [DB INFO] internal_expenses table columns verified/migrated successfully.");
+    } catch (expErr) {
+      console.warn("⚠️ [DB WARNING] Failed to alter internal_expenses table:", expErr);
+    }
+
     // Seed default permissions if table is empty
     const permCheck = await pool.query("SELECT COUNT(*) FROM role_permissions");
     if (Number(permCheck.rows[0].count) === 0) {
