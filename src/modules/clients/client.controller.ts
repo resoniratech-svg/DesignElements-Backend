@@ -119,7 +119,7 @@ export const deleteClient = async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error("DELETE CLIENT ERROR:", err);
 
-    res.status(500).json({
+    res.status(err.statusCode || 500).json({
       success: false,
       message: err.message || "Failed to delete client",
     });

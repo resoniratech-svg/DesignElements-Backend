@@ -293,18 +293,54 @@ export const deleteClientService = async (clientId: number) => {
     await client.query("BEGIN");
 
     // 1. Get the client first to find the user_id
-    const clientRes = await client.query("SELECT user_id FROM clients WHERE id = $1", [clientId]);
+    const clientRes = await client.query("SELECT user_id, name FROM clients WHERE id = $1", [clientId]);
     if (clientRes.rows.length === 0) {
       await client.query("ROLLBACK");
-      throw new Error("Client not found");
+      const notFoundErr: any = new Error("Client not found");
+      notFoundErr.statusCode = 404;
+      throw notFoundErr;
     }
     const userId = clientRes.rows[0].user_id;
 
-    // 2. Cleanup sub-tables
+    // 2. Check for active linked entities before allowing deletion
+    const linkedCheckIds = [clientId];
+    if (userId) linkedCheckIds.push(userId);
+
+    const [projectsRes, invoicesRes, boqsRes, quotationsRes, proposalsRes] = await Promise.all([
+      client.query(`SELECT COUNT(*) FROM projects WHERE client_id = ANY($1::int[])`, [linkedCheckIds]),
+      client.query(`SELECT COUNT(*) FROM invoices WHERE client_id = ANY($1::int[])`, [linkedCheckIds]),
+      client.query(`SELECT COUNT(*) FROM boqs WHERE client_id = ANY($1::int[])`, [linkedCheckIds]),
+      client.query(`SELECT COUNT(*) FROM quotations WHERE client_id = ANY($1::int[])`, [linkedCheckIds]),
+      client.query(`SELECT COUNT(*) FROM proposals WHERE client_id = ANY($1::int[])`, [linkedCheckIds]),
+    ]);
+
+    const linkedDetails: string[] = [];
+    const projectCount = parseInt(projectsRes.rows[0]?.count || "0");
+    const invoiceCount = parseInt(invoicesRes.rows[0]?.count || "0");
+    const boqCount = parseInt(boqsRes.rows[0]?.count || "0");
+    const quotationCount = parseInt(quotationsRes.rows[0]?.count || "0");
+    const proposalCount = parseInt(proposalsRes.rows[0]?.count || "0");
+
+    if (projectCount > 0) linkedDetails.push(`${projectCount} Project(s)`);
+    if (invoiceCount > 0) linkedDetails.push(`${invoiceCount} Invoice(s)`);
+    if (boqCount > 0) linkedDetails.push(`${boqCount} BOQ(s)`);
+    if (quotationCount > 0) linkedDetails.push(`${quotationCount} Quotation(s)`);
+    if (proposalCount > 0) linkedDetails.push(`${proposalCount} Proposal(s)`);
+
+    if (linkedDetails.length > 0) {
+      await client.query("ROLLBACK");
+      const hasLinksErr: any = new Error(
+        `Cannot delete client. This client has active linked records (${linkedDetails.join(", ")}). Please clear or reassign all linked records first before deleting.`
+      );
+      hasLinksErr.statusCode = 400;
+      throw hasLinksErr;
+    }
+
+    // 3. Cleanup sub-tables
     await client.query(`DELETE FROM client_licenses WHERE client_id = $1`, [clientId]);
     await client.query(`DELETE FROM client_agreements WHERE client_id = $1`, [clientId]);
 
-    // 3. Nullify references in main entities (Mapped to clients.id)
+    // 4. Nullify references in main entities (Mapped to clients.id)
     await client.query(`UPDATE boqs SET client_id = NULL WHERE client_id = $1`, [clientId]);
     await client.query(`UPDATE quotations SET client_id = NULL WHERE client_id = $1`, [clientId]);
     await client.query(`UPDATE proposals SET client_id = NULL WHERE client_id = $1`, [clientId]);
