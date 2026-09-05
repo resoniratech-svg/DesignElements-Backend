@@ -553,6 +553,19 @@ const initializeDatabase = async () => {
       );
     `);
 
+    // 33. Ledger Entries Table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ledger_entries (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        reference_type VARCHAR(100) NOT NULL,
+        reference_id VARCHAR(100) NOT NULL,
+        debit NUMERIC(15, 2) DEFAULT 0,
+        credit NUMERIC(15, 2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // ==========================================
     // SEEDING
     // ==========================================

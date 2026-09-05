@@ -135,6 +135,24 @@ pool.query("SELECT NOW()")
       console.warn("⚠️ [DB WARNING] Failed to alter users table:", userErr);
     }
 
+    // Ensure ledger_entries table exists
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS ledger_entries (
+          id SERIAL PRIMARY KEY,
+          client_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          reference_type VARCHAR(100) NOT NULL,
+          reference_id VARCHAR(100) NOT NULL,
+          debit NUMERIC(15, 2) DEFAULT 0,
+          credit NUMERIC(15, 2) DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log("🌱 [DB INFO] ledger_entries table verified/initialized successfully.");
+    } catch (ledgerErr) {
+      console.error("❌ [DB ERROR] Failed to initialize ledger_entries table:", ledgerErr);
+    }
+
     // Seed default permissions if table is empty
     const permCheck = await pool.query("SELECT COUNT(*) FROM role_permissions");
     if (Number(permCheck.rows[0].count) === 0) {
