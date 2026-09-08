@@ -241,7 +241,7 @@ export const getInvoices = async (req: Request, res: Response) => {
 
     // Data Query
     const query = `
-      SELECT i.*, u.name as client_name 
+      SELECT i.*, u.name as client_name, u.company_name as client_company 
       FROM invoices i
       LEFT JOIN users u ON i.client_id = u.id AND u.role_id = (SELECT id FROM roles WHERE name = 'CLIENT')
       ${scopedWhere}
@@ -276,7 +276,7 @@ export const getInvoiceById = async (req: Request, res: Response) => {
     const scopedAnd = AccessGuard.getScopedAnd(req.user, params, "i");
 
     const invoiceResult = await pool.query(
-      `SELECT i.*, u.name as client_name 
+      `SELECT i.*, u.name as client_name, u.company_name as client_company 
        FROM invoices i
        LEFT JOIN users u ON i.client_id = u.id
        WHERE i.id = $1 ${scopedAnd}`,
