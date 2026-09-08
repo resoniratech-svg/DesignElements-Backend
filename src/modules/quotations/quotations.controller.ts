@@ -261,7 +261,49 @@ export const createQuotation = async (req: any, res: Response) => {
 };
 
 /**
- * UPDATE QUOTATION
+ * Helper to compute the next revision ID for a quotation
+ * Examples:
+ * CON-QUO-001 -> CON-QUO-001(1.1)
+ * CON-QUO-001(1.1) -> CON-QUO-001(1.2)
+ * CON-QUO-002 -> CON-QUO-002(2.1)
+ */
+async function generateNextQuotationRevision(client: any, currentQtnNumber: string): Promise<string> {
+  // 1. Extract base quotation string (strip existing revision suffix e.g. "(1.1)")
+  const baseMatch = currentQtnNumber.match(/^([^(]+)(?:\((\d+)\.(\d+)\))?$/);
+  const baseQtn = baseMatch ? baseMatch[1].trim() : currentQtnNumber.trim();
+
+  // 2. Extract the base sequence integer (e.g. from "CON-QUO-001" -> 1, "CON-QUO-002" -> 2)
+  const numMatch = baseQtn.match(/(\d+)$/);
+  const baseSequenceNum = numMatch ? parseInt(numMatch[1], 10) : 1;
+
+  // 3. Query all existing records matching baseQtn or baseQtn(baseSequenceNum.%)
+  const searchPattern = `${baseQtn}(${baseSequenceNum}.%`;
+  const existingRes = await client.query(
+    `SELECT qtn_number FROM quotations WHERE qtn_number = $1 OR qtn_number LIKE $2`,
+    [baseQtn, searchPattern]
+  );
+
+  let maxRevision = baseMatch && baseMatch[3] ? parseInt(baseMatch[3], 10) : 0;
+  const escapedBase = baseQtn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`^${escapedBase}\\(${baseSequenceNum}\\.(\\d+)\\)$`);
+
+  for (const row of existingRes.rows) {
+    const qtn = row.qtn_number;
+    const m = qtn.match(regex);
+    if (m && m[1]) {
+      const revNum = parseInt(m[1], 10);
+      if (revNum > maxRevision) {
+        maxRevision = revNum;
+      }
+    }
+  }
+
+  const nextRevision = maxRevision + 1;
+  return `${baseQtn}(${baseSequenceNum}.${nextRevision})`;
+}
+
+/**
+ * UPDATE QUOTATION (Creates a new immutable revision record)
  */
 export const updateQuotation = async (req: any, res: Response) => {
   const client = await pool.connect();
@@ -276,6 +318,7 @@ export const updateQuotation = async (req: any, res: Response) => {
       terms,
       project_name,
       client_name,
+      client_id,
       division,
       attn,
       attn_designation,
@@ -304,87 +347,94 @@ export const updateQuotation = async (req: any, res: Response) => {
     const oldRes = await client.query(`SELECT * FROM quotations WHERE id::text = $1 OR qtn_number = $1`, [id]);
     if (!oldRes.rows.length) return error(res, "Quotation not found", 404);
     const oldRecord = oldRes.rows[0];
-    const internalId = oldRecord.id;
 
-    // ✅ Senior Level Security: Client restriction logic
-    if (req.user && req.user.role === 'CLIENT') {
-      if (String(oldRecord.client_id) !== String(req.user.id)) {
-        await client.query("ROLLBACK");
-        return error(res, "Unauthorized: Ownership mismatch", 403);
-      }
-      // Clients can ONLY update status
-      if (!status) {
-        await client.query("ROLLBACK");
-        return error(res, "Invalid request: Status required for client update", 400);
+    // Check if this is purely a status update or a content edit
+    const isStatusOnlyUpdate = 
+      status !== undefined &&
+      items === undefined &&
+      total_amount === undefined &&
+      terms === undefined &&
+      intro_text === undefined &&
+      project_name === undefined;
+
+    if (isStatusOnlyUpdate) {
+      // Pure status change: update the existing row directly
+      const updatedStatus = status.toUpperCase();
+      const statusRes = await client.query(
+        `UPDATE quotations SET status = $1::approval_status, updated_at = NOW() WHERE id = $2 RETURNING *`,
+        [updatedStatus, oldRecord.id]
+      );
+      await client.query("COMMIT");
+      return success(res, "Quotation status updated successfully", statusRes.rows[0]);
+    }
+
+    // 2. Full Edit: Generate NEW revision number and INSERT new row (preserving oldRecord untouched)
+    const newQtnNumber = await generateNextQuotationRevision(client, oldRecord.qtn_number);
+
+    let target_user_id = client_id || oldRecord.client_id;
+    if (target_user_id) {
+      const clientMap = await client.query(`SELECT user_id FROM clients WHERE id = $1`, [target_user_id]);
+      if (clientMap.rows.length > 0 && clientMap.rows[0].user_id) {
+        target_user_id = clientMap.rows[0].user_id;
       }
     }
 
-    const oldStatus = oldRecord.status;
-    let final_status = (status || oldStatus).toUpperCase();
+    const final_status = (status || oldRecord.status || 'PENDING_APPROVAL').toUpperCase();
+    const final_division = (division || oldRecord.division || 'CONTRACTING').toUpperCase().trim();
 
-    // 2. Perform Credit Check (Wrap in try-catch to avoid blocking the main update)
-    try {
-      if (final_status === 'APPROVED' && oldStatus !== 'APPROVED') {
-        const creditCheck = await validateCreditLimit(client, oldRecord.client_id, total_amount || oldRecord.total_amount || 0);
-        if (creditCheck.isExceeded) {
-          // Do not override if the client is the one approving (client acceptance)
-          if (req.user && req.user.role !== 'CLIENT') {
-            final_status = 'PENDING_APPROVAL';
-            console.warn(`[CREDIT] Limit exceeded for ${oldRecord.qtn_number}. Status adjusted to PENDING_APPROVAL.`);
-          } else {
-            console.warn(`[CREDIT] Limit exceeded for ${oldRecord.qtn_number}, but client approved it. Keeping status as APPROVED.`);
-          }
-        }
-      }
-    } catch (creditErr: any) {
-      console.error(`[CREDIT_CHECK_ERROR] Non-blocking failure for ${oldRecord.qtn_number}:`, creditErr.message);
-      // We continue with the update as failing the credit check logic shouldn't crash the entire API
-    }
-
-    const query = `
-      UPDATE quotations 
-      SET 
-        status = $1::approval_status, 
-        total_amount = $2, 
-        items = $3::jsonb, 
-        valid_until = $4, 
-        terms = $5,
-        project_name = COALESCE($6, project_name),
-        client_name = COALESCE($7, client_name),
-        attn = $8,
-        attn_designation = $9,
-        salutation = $10,
-        reference_no = $11,
-        intro_text = $12,
-        tc_terms = $13,
-        tc_payment = $14,
-        tc_delivery = $15,
-        tc_installation = $16,
-        tc_validity = $17,
-        outro_text = $18,
-        salesman = $19,
-        salesman_designation = $20,
-        salesman_phone = $21,
-        salesman_email = $22,
-        client_phone = $23,
-        client_email = $24,
-        selected_format = $25,
-        discount = COALESCE($26, discount),
-        division = COALESCE($27::division_type, division),
-        created_at = COALESCE($28::timestamp, created_at),
-        updated_at = NOW()
-      WHERE id = $29
+    const insertQuery = `
+      INSERT INTO quotations (
+        qtn_number,
+        client_id,
+        division,
+        total_amount,
+        status,
+        items,
+        valid_until,
+        terms,
+        project_name,
+        client_name,
+        attn,
+        attn_designation,
+        salutation,
+        reference_no,
+        intro_text,
+        tc_terms,
+        tc_payment,
+        tc_delivery,
+        tc_installation,
+        tc_validity,
+        outro_text,
+        salesman,
+        salesman_designation,
+        salesman_phone,
+        salesman_email,
+        client_phone,
+        client_email,
+        selected_format,
+        discount,
+        created_at,
+        updated_at
+      ) VALUES (
+        $1, $2, $3::division_type, $4, $5::approval_status, $6::jsonb, $7, $8, $9, $10,
+        $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+        $21, $22, $23, $24, $25, $26, $27, $28, $29,
+        COALESCE($30::timestamp, NOW()), NOW()
+      )
       RETURNING *
     `;
 
     const values = [
-      final_status,
+      newQtnNumber,
+      target_user_id || null,
+      final_division,
       total_amount !== undefined ? total_amount : oldRecord.total_amount,
+      final_status,
       JSON.stringify(items || oldRecord.items || []),
-      valid_until !== undefined ? valid_until : oldRecord.valid_until,
+      valid_until ? new Date(valid_until).toISOString() : (oldRecord.valid_until ? new Date(oldRecord.valid_until).toISOString() : null),
       terms !== undefined ? terms : (oldRecord.terms || ''),
-      project_name || null,
-      client_name || null,
+      project_name || oldRecord.project_name || '',
+      client_name || oldRecord.client_name || '',
       attn !== undefined ? attn : oldRecord.attn,
       attn_designation !== undefined ? attn_designation : oldRecord.attn_designation,
       salutation !== undefined ? salutation : oldRecord.salutation,
@@ -402,42 +452,32 @@ export const updateQuotation = async (req: any, res: Response) => {
       salesman_email !== undefined ? salesman_email : oldRecord.salesman_email,
       client_phone !== undefined ? client_phone : oldRecord.client_phone,
       client_email !== undefined ? client_email : oldRecord.client_email,
-      selected_format !== undefined
-        ? selected_format
-        : oldRecord.selected_format,
-
-      discount !== undefined
-        ? Number(discount)
-        : Number(oldRecord.discount || 0),
-
-      division !== undefined
-        ? division.toUpperCase()
-        : oldRecord.division,
-
-      created_at !== undefined && created_at !== null ? new Date(created_at).toISOString() : null,
-      internalId
+      selected_format || oldRecord.selected_format || 'quotation1',
+      discount !== undefined ? Number(discount) : Number(oldRecord.discount || 0),
+      created_at ? new Date(created_at).toISOString() : null
     ];
 
-    const result = await client.query(query, values);
+    const result = await client.query(insertQuery, values);
+    const newQuotation = result.rows[0];
 
-    // 3. Log Audit (Wrap in try-catch: Logging failure should NEVER block the business transaction)
+    // Log Audit
     try {
-      if (final_status !== oldStatus) {
+      if (req.user) {
         await createAuditLog(client, {
           userId: req.user.id,
-          action: "STATUS_CHANGE",
+          action: "REVISION_CREATED",
           entityType: "QUOTATION",
-          entityId: internalId,
-          oldValue: { status: oldStatus },
-          newValue: { status: final_status }
+          entityId: newQuotation.id,
+          oldValue: { qtn_number: oldRecord.qtn_number },
+          newValue: { qtn_number: newQuotation.qtn_number }
         });
       }
     } catch (auditErr: any) {
-      console.error(`[AUDIT_LOG_ERROR] Failed to log status change for ${oldRecord.qtn_number}:`, auditErr.message);
+      console.error(`[AUDIT_LOG_ERROR] Failed to log revision for ${newQtnNumber}:`, auditErr.message);
     }
 
     await client.query("COMMIT");
-    return success(res, "Quotation updated successfully", result.rows[0]);
+    return success(res, "Quotation revision created successfully", newQuotation);
   } catch (err: any) {
     await client.query("ROLLBACK");
     console.error("UPDATE QUOTATION ERROR:", err.message);
@@ -460,7 +500,7 @@ export const getQuotationById = async (req: any, res: Response) => {
         u.company_name as client_company
       FROM quotations q
       LEFT JOIN users u ON q.client_id = u.id
-      WHERE q.id = $1
+      WHERE (q.id::text = $1 OR q.qtn_number = $1)
     `;
 
     const params = [id];
@@ -494,26 +534,27 @@ export const getNextQuotationNumber = async (req: Request, res: Response) => {
     const prefix = prefixMap[divisionStr.toLowerCase()] || 'CON';
     const formatPrefix = `${prefix}-QUO-`;
 
-    // Fetch the max number for this division from the database
+    // Fetch all quotations for this division prefix
     const resData = await pool.query(`
       SELECT qtn_number 
       FROM quotations 
-      WHERE qtn_number LIKE $1 
-      ORDER BY qtn_number DESC 
-      LIMIT 1
+      WHERE qtn_number LIKE $1
     `, [`${formatPrefix}%`]);
 
-    let nextNum = 1;
-    if (resData.rows.length > 0) {
-      const lastQtn = resData.rows[0].qtn_number;
-      const parts = lastQtn.split('-');
-      const lastPart = parts[parts.length - 1];
-      const parsed = parseInt(lastPart);
-      if (!isNaN(parsed)) {
-        nextNum = parsed + 1;
+    let maxBaseNum = 0;
+    for (const row of resData.rows) {
+      const qtn = row.qtn_number;
+      // Extract base number before any parentheses
+      const baseMatch = qtn.match(new RegExp(`^${formatPrefix}(\\d+)`));
+      if (baseMatch && baseMatch[1]) {
+        const num = parseInt(baseMatch[1], 10);
+        if (num > maxBaseNum) {
+          maxBaseNum = num;
+        }
       }
     }
 
+    const nextNum = maxBaseNum + 1;
     const formattedNum = nextNum.toString().padStart(3, '0');
     return success(res, "Next number fetched", { nextNumber: `${formatPrefix}${formattedNum}` });
   } catch (err: any) {
@@ -530,11 +571,13 @@ export const deleteQuotation = async (req: any, res: Response) => {
     const { id } = req.params;
 
     // 1. Check if it exists
-    const checkRes = await pool.query(`SELECT id FROM quotations WHERE id = $1`, [id]);
+    const checkRes = await pool.query(`SELECT id FROM quotations WHERE id::text = $1 OR qtn_number = $1`, [id]);
     if (checkRes.rows.length === 0) return error(res, "Quotation not found", 404);
 
+    const targetId = checkRes.rows[0].id;
+
     // 2. Perform Delete
-    await pool.query(`DELETE FROM quotations WHERE id = $1`, [id]);
+    await pool.query(`DELETE FROM quotations WHERE id = $1`, [targetId]);
 
     return success(res, "Quotation deleted successfully from database");
   } catch (err: any) {
