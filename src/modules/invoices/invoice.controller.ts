@@ -233,7 +233,8 @@ export const getInvoices = async (req: Request, res: Response) => {
     const countQuery = `
       SELECT COUNT(*) as count 
       FROM invoices i
-      LEFT JOIN users u ON i.client_id = u.id AND u.role_id = (SELECT id FROM roles WHERE name = 'CLIENT')
+      LEFT JOIN users u ON i.client_id = u.id
+      LEFT JOIN clients c ON i.client_id = c.id OR i.client_id = c.user_id
       ${scopedWhere}
     `;
     const totalRes = await pool.query(countQuery, params);
@@ -241,9 +242,12 @@ export const getInvoices = async (req: Request, res: Response) => {
 
     // Data Query
     const query = `
-      SELECT i.*, u.name as client_name, u.company_name as client_company 
+      SELECT i.*, 
+             COALESCE(u.name, c.contact_person, i.client_name) as client_name, 
+             COALESCE(u.company_name, c.name) as client_company 
       FROM invoices i
-      LEFT JOIN users u ON i.client_id = u.id AND u.role_id = (SELECT id FROM roles WHERE name = 'CLIENT')
+      LEFT JOIN users u ON i.client_id = u.id
+      LEFT JOIN clients c ON i.client_id = c.id OR i.client_id = c.user_id
       ${scopedWhere}
       ORDER BY i.created_at DESC
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
