@@ -109,8 +109,8 @@ export const getProjects = async (req: Request, res: Response) => {
       SELECT
         p.id,
         p.client_id,
-        COALESCE(u.name, c.name, p.client_name) as client_name,
-        COALESCE(u.company_name, c.company_name) as client_company,
+        COALESCE(u.name, c.contact_person, p.client_name) as client_name,
+        COALESCE(u.company_name, c.name) as client_company,
         p.project_name,
         p.contract_value,
         p.start_date,
