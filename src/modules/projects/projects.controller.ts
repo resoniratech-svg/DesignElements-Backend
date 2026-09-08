@@ -110,6 +110,7 @@ export const getProjects = async (req: Request, res: Response) => {
         p.id,
         p.client_id,
         u.name as client_name,
+        u.company_name as client_company,
         p.project_name,
         p.contract_value,
         p.start_date,
