@@ -109,8 +109,8 @@ export const getProjects = async (req: Request, res: Response) => {
       SELECT
         p.id,
         p.client_id,
-        u.name as client_name,
-        u.company_name as client_company,
+        COALESCE(u.name, c.name, p.client_name) as client_name,
+        COALESCE(u.company_name, c.company_name) as client_company,
         p.project_name,
         p.contract_value,
         p.start_date,
@@ -123,7 +123,8 @@ export const getProjects = async (req: Request, res: Response) => {
         p.uploaded_document,
         p.created_at
        FROM projects p
-       LEFT JOIN users u ON p.client_id = u.id AND u.role_id = (SELECT id FROM roles WHERE name = 'CLIENT')
+       LEFT JOIN users u ON p.client_id = u.id
+       LEFT JOIN clients c ON p.client_id = c.id OR p.client_id = c.user_id
     `;
 
     // ✅ Centralized Scoping
