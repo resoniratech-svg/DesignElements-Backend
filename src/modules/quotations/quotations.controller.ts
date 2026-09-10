@@ -36,6 +36,7 @@ export const getQuotations = async (req: any, res: Response) => {
     const countQuery = `
       SELECT COUNT(*) as count 
       FROM quotations q
+      LEFT JOIN clients c ON q.client_id = c.id
       LEFT JOIN users u ON q.client_id = u.id
       ${whereClause}
     `;
@@ -45,9 +46,10 @@ export const getQuotations = async (req: any, res: Response) => {
     let query = `
       SELECT 
         q.*,
-        u.name as client_name,
-        u.company_name as client_company
+        COALESCE(c.contact_person, u.name, q.client_name) as client_name,
+        COALESCE(c.name, u.company_name, q.client_name) as client_company
       FROM quotations q
+      LEFT JOIN clients c ON q.client_id = c.id
       LEFT JOIN users u ON q.client_id = u.id
       ${whereClause}
       ORDER BY q.updated_at DESC
@@ -499,9 +501,10 @@ export const getQuotationById = async (req: any, res: Response) => {
     let query = `
       SELECT 
         q.*,
-        u.name as client_name,
-        u.company_name as client_company
+        COALESCE(c.contact_person, u.name, q.client_name) as client_name,
+        COALESCE(c.name, u.company_name, q.client_name) as client_company
       FROM quotations q
+      LEFT JOIN clients c ON q.client_id = c.id
       LEFT JOIN users u ON q.client_id = u.id
       WHERE (q.id::text = $1 OR q.qtn_number = $1)
     `;
