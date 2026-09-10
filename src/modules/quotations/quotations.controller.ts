@@ -310,6 +310,7 @@ export const updateQuotation = async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const {
+      qtn_number,
       status,
       total_amount,
       discount,
@@ -368,8 +369,10 @@ export const updateQuotation = async (req: any, res: Response) => {
       return success(res, "Quotation status updated successfully", statusRes.rows[0]);
     }
 
-    // 2. Full Edit: Generate NEW revision number and INSERT new row (preserving oldRecord untouched)
-    const newQtnNumber = await generateNextQuotationRevision(client, oldRecord.qtn_number);
+    // 2. Full Edit: Generate NEW revision number or use custom qtn_number (preserving oldRecord untouched)
+    const newQtnNumber = (qtn_number && qtn_number.trim() && qtn_number.trim() !== oldRecord.qtn_number)
+      ? qtn_number.trim()
+      : await generateNextQuotationRevision(client, oldRecord.qtn_number);
 
     let target_user_id = client_id || oldRecord.client_id;
     if (target_user_id) {

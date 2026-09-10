@@ -344,11 +344,63 @@ export const updateInvoice = async (req: any, res: Response) => {
       }
     }
 
+    if (headerData.client_id) {
+      let target_user_id = Number(headerData.client_id);
+      const userRoleCheck = await client.query(
+        `SELECT id FROM users WHERE id = $1 AND role_id = (SELECT id FROM roles WHERE name = 'CLIENT')`,
+        [target_user_id]
+      );
+      if (userRoleCheck.rows.length === 0) {
+        const clientMap = await client.query(`SELECT user_id FROM clients WHERE id = $1`, [target_user_id]);
+        if (clientMap.rows.length > 0 && clientMap.rows[0].user_id) {
+          target_user_id = clientMap.rows[0].user_id;
+        }
+      }
+      headerData.client_id = target_user_id;
+    }
+
+    const ALLOWED_COLUMNS = new Set([
+      "invoice_number",
+      "division",
+      "client_id",
+      "invoice_date",
+      "due_date",
+      "total_amount",
+      "subtotal",
+      "tax_rate",
+      "tax_amount",
+      "discount",
+      "status",
+      "approval_status",
+      "lpo_no",
+      "salesman",
+      "qid",
+      "address",
+      "client_name",
+      "ref_type",
+      "reference_number",
+      "ref_no",
+      "project_name",
+      "notes",
+      "payment_terms",
+      "amount_paid",
+      "balance_amount",
+      "manager_id",
+      "contact_number",
+      "delivery_note",
+      "dn_date",
+      "dn_prepared_by",
+      "dn_checked_by",
+      "dn_receiver_name",
+      "invoice_type"
+    ]);
+
     const fields: string[] = [];
     const values: any[] = [];
     let index = 1;
 
     Object.keys(headerData).forEach((key) => {
+      if (!ALLOWED_COLUMNS.has(key)) return;
       if (key === 'ref_no' || key === 'reference_number') {
         fields.push(`reference_number = $${index}`);
         fields.push(`ref_no = $${index++}`);
