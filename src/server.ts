@@ -105,6 +105,16 @@ pool.query("SELECT NOW()")
       console.warn("⚠️ [DB WARNING] Failed to alter invoices table:", invErr);
     }
 
+    // Ensure quotations table has all required columns
+    try {
+      await pool.query(`
+        ALTER TABLE quotations ADD COLUMN IF NOT EXISTS client_company VARCHAR(255);
+      `);
+      console.log("🌱 [DB INFO] Quotations table columns verified/migrated successfully.");
+    } catch (quoErr) {
+      console.warn("⚠️ [DB WARNING] Failed to alter quotations table:", quoErr);
+    }
+
     // Ensure projects table has all required columns
     try {
       await pool.query(`
