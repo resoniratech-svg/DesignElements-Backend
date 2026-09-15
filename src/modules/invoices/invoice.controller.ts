@@ -243,11 +243,17 @@ export const getInvoices = async (req: Request, res: Response) => {
     // Data Query
     const query = `
       SELECT i.*, 
-             COALESCE(u.name, c.contact_person, i.client_name) as client_name, 
-             COALESCE(u.company_name, c.name) as client_company 
+             COALESCE(NULLIF(i.client_name, ''), c.contact_person, u.name) as client_name, 
+             COALESCE(u.company_name, c.name, i.client_name) as client_company 
       FROM invoices i
       LEFT JOIN users u ON i.client_id = u.id
-      LEFT JOIN clients c ON i.client_id = c.id OR i.client_id = c.user_id
+      LEFT JOIN LATERAL (
+        SELECT name, contact_person 
+        FROM clients 
+        WHERE user_id = i.client_id OR id = i.client_id 
+        ORDER BY CASE WHEN user_id = i.client_id THEN 0 ELSE 1 END 
+        LIMIT 1
+      ) c ON true
       ${scopedWhere}
       ORDER BY i.created_at DESC
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}

@@ -225,11 +225,17 @@ export const getBOQs = async (req: any, res: Response) => {
             SELECT b.*, 
                    b.created_at as date, 
                    COALESCE(b.sector, u.sector, u.division) as resolved_sector,
-                   COALESCE(u.name, c.contact_person, b.client_name) as client_name,
-                   COALESCE(u.company_name, c.name) as client_company
+                   COALESCE(NULLIF(b.client_name, ''), c.contact_person, u.name) as client_name,
+                   COALESCE(u.company_name, c.name, b.client_name) as client_company
              FROM boqs b 
              LEFT JOIN users u ON b.client_id = u.id
-             LEFT JOIN clients c ON b.client_id = c.id OR b.client_id = c.user_id
+             LEFT JOIN LATERAL (
+               SELECT name, contact_person 
+               FROM clients 
+               WHERE user_id = b.client_id OR id = b.client_id 
+               ORDER BY CASE WHEN user_id = b.client_id THEN 0 ELSE 1 END 
+               LIMIT 1
+             ) c ON true
              ${scopedWhere} 
              ORDER BY b.created_at DESC
              LIMIT $${params.length + 1} OFFSET $${params.length + 2}
