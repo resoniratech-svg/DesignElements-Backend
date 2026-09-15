@@ -104,7 +104,24 @@ export const getProjects = async (req: Request, res: Response) => {
     const offset = (page - 1) * limit;
 
     const params: any[] = [];
-    
+    let scopedWhere = AccessGuard.getScopedWhere(req.user, params, "p");
+
+    // ✅ Division/Sector Filter
+    if (division && division !== 'all') {
+      params.push(division);
+      scopedWhere += ` AND UPPER(p.division::TEXT) = UPPER($${params.length})`;
+    }
+
+    // Count total rows cleanly
+    const countQuery = `
+      SELECT COUNT(*) as count 
+      FROM projects p
+      LEFT JOIN users u ON p.client_id = u.id
+      ${scopedWhere}
+    `;
+    const totalRes = await pool.query(countQuery, params);
+    const total = parseInt(totalRes.rows[0].count);
+
     let query = `
       SELECT
         p.id,
@@ -131,27 +148,12 @@ export const getProjects = async (req: Request, res: Response) => {
          ORDER BY CASE WHEN user_id = p.client_id THEN 0 ELSE 1 END 
          LIMIT 1
        ) c ON true
+       ${scopedWhere}
+       ORDER BY p.created_at DESC 
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `;
 
-    // ✅ Centralized Scoping
-    query += ` ${AccessGuard.getScopedWhere(req.user, params, "p")}`;
-
-    // ✅ Division/Sector Filter
-    if (division && division !== 'all') {
-      params.push(division);
-      query += ` AND UPPER(p.division::TEXT) = UPPER($${params.length})`;
-    }
-
-    query += ` ORDER BY p.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
-
-    // Count total row - Strip LIMIT and OFFSET for the count
-    const countQuery = query
-      .split("ORDER BY")[0] // Remove everything from ORDER BY onwards for count
-      .replace(/SELECT[\s\S]*?FROM/, "SELECT COUNT(*) as count FROM");
-    
-    const totalRes = await pool.query(countQuery, params.slice(0, -2));
-    const total = parseInt(totalRes.rows[0].count);
 
     const result = await pool.query(query, params);
 
