@@ -36,8 +36,8 @@ export const getQuotations = async (req: any, res: Response) => {
     const countQuery = `
       SELECT COUNT(*) as count 
       FROM quotations q
-      LEFT JOIN clients c ON q.client_id = c.id
       LEFT JOIN users u ON q.client_id = u.id
+      LEFT JOIN clients c ON (q.client_id = c.user_id OR q.client_id = c.id)
       ${whereClause}
     `;
     const totalRes = await pool.query(countQuery, params);
@@ -46,11 +46,11 @@ export const getQuotations = async (req: any, res: Response) => {
     let query = `
       SELECT 
         q.*,
-        COALESCE(c.contact_person, u.name, q.client_name) as client_name,
-        COALESCE(c.name, u.company_name, q.client_name) as client_company
+        COALESCE(NULLIF(q.client_name, ''), c.contact_person, u.name) as client_name,
+        COALESCE(NULLIF(q.client_company, ''), c.name, u.company_name, q.client_name) as client_company
       FROM quotations q
-      LEFT JOIN clients c ON q.client_id = c.id
       LEFT JOIN users u ON q.client_id = u.id
+      LEFT JOIN clients c ON (q.client_id = c.user_id OR q.client_id = c.id)
       ${whereClause}
       ORDER BY q.updated_at DESC
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
@@ -89,6 +89,7 @@ export const createQuotation = async (req: any, res: Response) => {
       terms,
       project_name,
       client_name,
+      client_company,
       attn,
       attn_designation,
       salutation,
@@ -178,6 +179,7 @@ export const createQuotation = async (req: any, res: Response) => {
         terms,
         project_name,
         client_name,
+        client_company,
         attn,
         attn_designation,
         salutation,
@@ -198,7 +200,7 @@ export const createQuotation = async (req: any, res: Response) => {
         selected_format,
         discount,
         created_at
-      ) VALUES ($1, $2, $3::division_type, $4, $5::approval_status, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, COALESCE($30::timestamp, NOW()))
+      ) VALUES ($1, $2, $3::division_type, $4, $5::approval_status, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, COALESCE($31::timestamp, NOW()))
       RETURNING *
     `;
 
@@ -213,6 +215,7 @@ export const createQuotation = async (req: any, res: Response) => {
       terms || '',
       project_name || '',
       client_name || '',
+      client_company || '',
       attn || null,
       attn_designation || null,
       salutation || null,
@@ -321,6 +324,7 @@ export const updateQuotation = async (req: any, res: Response) => {
       terms,
       project_name,
       client_name,
+      client_company,
       client_id,
       division,
       attn,
@@ -399,6 +403,7 @@ export const updateQuotation = async (req: any, res: Response) => {
         terms,
         project_name,
         client_name,
+        client_company,
         attn,
         attn_designation,
         salutation,
@@ -423,8 +428,8 @@ export const updateQuotation = async (req: any, res: Response) => {
       ) VALUES (
         $1, $2, $3::division_type, $4, $5::approval_status, $6::jsonb, $7, $8, $9, $10,
         $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-        $21, $22, $23, $24, $25, $26, $27, $28, $29,
-        COALESCE($30::timestamp, NOW()), NOW()
+        $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
+        COALESCE($31::timestamp, NOW()), NOW()
       )
       RETURNING *
     `;
@@ -440,6 +445,7 @@ export const updateQuotation = async (req: any, res: Response) => {
       terms !== undefined ? terms : (oldRecord.terms || ''),
       project_name || oldRecord.project_name || '',
       client_name || oldRecord.client_name || '',
+      client_company !== undefined ? client_company : (oldRecord.client_company || ''),
       attn !== undefined ? attn : oldRecord.attn,
       attn_designation !== undefined ? attn_designation : oldRecord.attn_designation,
       salutation !== undefined ? salutation : oldRecord.salutation,
@@ -501,11 +507,11 @@ export const getQuotationById = async (req: any, res: Response) => {
     let query = `
       SELECT 
         q.*,
-        COALESCE(c.contact_person, u.name, q.client_name) as client_name,
-        COALESCE(c.name, u.company_name, q.client_name) as client_company
+        COALESCE(NULLIF(q.client_name, ''), c.contact_person, u.name) as client_name,
+        COALESCE(NULLIF(q.client_company, ''), c.name, u.company_name, q.client_name) as client_company
       FROM quotations q
-      LEFT JOIN clients c ON q.client_id = c.id
       LEFT JOIN users u ON q.client_id = u.id
+      LEFT JOIN clients c ON (q.client_id = c.user_id OR q.client_id = c.id)
       WHERE (q.id::text = $1 OR q.qtn_number = $1)
     `;
 
