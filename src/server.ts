@@ -94,11 +94,23 @@ pool.query("SELECT NOW()")
       console.error("❌ [DB ERROR] Failed to initialize doc_counters table:", countErr);
     }
 
-    // Ensure invoices table has all required columns
+    // Ensure invoices table has all required columns and ample varchar length
     try {
       await pool.query(`
-        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_type VARCHAR(50) DEFAULT 'Standard';
-        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS ref_no VARCHAR(100);
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_type VARCHAR(255) DEFAULT 'Standard';
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS ref_no VARCHAR(255);
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_company VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN invoice_type TYPE VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN approval_status TYPE VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN invoice_number TYPE VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN reference_number TYPE VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN ref_no TYPE VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN project_name TYPE VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN client_name TYPE VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN contact_number TYPE VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN dn_prepared_by TYPE VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN dn_checked_by TYPE VARCHAR(255);
+        ALTER TABLE invoices ALTER COLUMN dn_receiver_name TYPE VARCHAR(255);
       `);
       console.log("🌱 [DB INFO] Invoices table columns verified/migrated successfully.");
     } catch (invErr) {
