@@ -37,7 +37,6 @@ export const getQuotations = async (req: any, res: Response) => {
       SELECT COUNT(*) as count 
       FROM quotations q
       LEFT JOIN users u ON q.client_id = u.id
-      LEFT JOIN clients c ON (q.client_id = c.user_id OR q.client_id = c.id)
       ${whereClause}
     `;
     const totalRes = await pool.query(countQuery, params);
@@ -50,7 +49,13 @@ export const getQuotations = async (req: any, res: Response) => {
         COALESCE(NULLIF(q.client_company, ''), c.name, u.company_name, q.client_name) as client_company
       FROM quotations q
       LEFT JOIN users u ON q.client_id = u.id
-      LEFT JOIN clients c ON (q.client_id = c.user_id OR q.client_id = c.id)
+      LEFT JOIN LATERAL (
+        SELECT name, contact_person 
+        FROM clients 
+        WHERE user_id = q.client_id OR id = q.client_id 
+        ORDER BY CASE WHEN user_id = q.client_id THEN 0 ELSE 1 END 
+        LIMIT 1
+      ) c ON true
       ${whereClause}
       ORDER BY q.updated_at DESC
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
@@ -511,7 +516,13 @@ export const getQuotationById = async (req: any, res: Response) => {
         COALESCE(NULLIF(q.client_company, ''), c.name, u.company_name, q.client_name) as client_company
       FROM quotations q
       LEFT JOIN users u ON q.client_id = u.id
-      LEFT JOIN clients c ON (q.client_id = c.user_id OR q.client_id = c.id)
+      LEFT JOIN LATERAL (
+        SELECT name, contact_person 
+        FROM clients 
+        WHERE user_id = q.client_id OR id = q.client_id 
+        ORDER BY CASE WHEN user_id = q.client_id THEN 0 ELSE 1 END 
+        LIMIT 1
+      ) c ON true
       WHERE (q.id::text = $1 OR q.qtn_number = $1)
     `;
 
