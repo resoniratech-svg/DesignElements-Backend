@@ -399,7 +399,14 @@ export const updateInvoice = async (req: any, res: Response) => {
       "dn_checked_by",
       "dn_receiver_name",
       "invoice_type",
-      "client_company"
+      "client_company",
+      "coc_number",
+      "coc_date",
+      "coc_start_date",
+      "coc_completion_date",
+      "coc_product",
+      "coc_remarks",
+      "coc_has_no_remarks"
     ]);
 
     const fields: string[] = [];

@@ -100,6 +100,13 @@ pool.query("SELECT NOW()")
         ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_type VARCHAR(255) DEFAULT 'Standard';
         ALTER TABLE invoices ADD COLUMN IF NOT EXISTS ref_no VARCHAR(255);
         ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_company VARCHAR(255);
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_number VARCHAR(255);
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_date VARCHAR(255);
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_start_date VARCHAR(255);
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_completion_date VARCHAR(255);
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_product TEXT;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_remarks TEXT;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_has_no_remarks BOOLEAN DEFAULT TRUE;
         ALTER TABLE invoices ALTER COLUMN invoice_type TYPE VARCHAR(255);
         ALTER TABLE invoices ALTER COLUMN approval_status TYPE VARCHAR(255);
         ALTER TABLE invoices ALTER COLUMN invoice_number TYPE VARCHAR(255);
