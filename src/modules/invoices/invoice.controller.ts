@@ -223,6 +223,7 @@ export const getInvoices = async (req: Request, res: Response) => {
 
     const params: any[] = [];
     let scopedWhere = AccessGuard.getScopedWhere(req.user, params, "i");
+    scopedWhere += ` AND i.deleted_at IS NULL`;
 
     if (division && division !== "all") {
         params.push(division);
@@ -489,47 +490,92 @@ export const updateInvoice = async (req: any, res: Response) => {
 };
 
 // ==============================
-// DELETE INVOICE
+// DELETE INVOICE (SOFT DELETE TO RECYCLE BIN)
 // ==============================
 export const deleteInvoice = async (req: any, res: Response) => {
-  const client = await pool.connect();
   try {
     const id = Number(req.params.id);
 
-    await client.query("BEGIN");
-
-    // Delete dependent records first to handle foreign key constraints
-    await client.query(`DELETE FROM invoice_items WHERE invoice_id = $1`, [id]);
-    await client.query(`DELETE FROM payments WHERE invoice_id = $1`, [id]);
-
-    // Now delete the invoice itself
-    const result = await client.query(`DELETE FROM invoices WHERE id = $1 RETURNING id`, [id]);
+    const result = await pool.query(
+      `UPDATE invoices SET deleted_at = NOW() WHERE id = $1 RETURNING id, invoice_number`,
+      [id]
+    );
     
     if (result.rowCount === 0) {
-      await client.query("ROLLBACK");
       return error(res, "Invoice not found", 404);
     }
 
     try {
-        await createActivity({
-        userId: req.user.id,
-        action: "DELETE_INVOICE",
+      await createActivity({
+        userId: req.user?.id || 1,
+        action: "SOFT_DELETE_INVOICE",
         module: "INVOICE",
-        details: { invoice_id: id }
-        });
+        details: { invoice_id: id, invoice_number: result.rows[0].invoice_number }
+      });
     } catch (actErr) {
-        console.warn("Activity logging failed during delete_invoice, ignoring.", actErr);
+      console.warn("Activity logging failed during delete_invoice, ignoring.", actErr);
     }
 
-    await client.query("COMMIT");
-    return success(res, "Invoice deleted");
-
+    return success(res, "Invoice moved to Recycle Bin successfully");
   } catch (err: any) {
-    if (client) await client.query("ROLLBACK");
     console.error("DELETE INVOICE ERROR:", err);
     return error(res, err.message, 500);
-  } finally {
-    client.release();
+  }
+};
+
+// ==============================
+// DELETE DELIVERY NOTE (SOFT DELETE TO RECYCLE BIN)
+// ==============================
+export const deleteInvoiceDeliveryNote = async (req: any, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const result = await pool.query(
+      `UPDATE invoices SET dn_deleted_at = NOW() WHERE id = $1 RETURNING id, delivery_note`,
+      [id]
+    );
+    if (result.rowCount === 0) return error(res, "Invoice not found", 404);
+
+    try {
+      await createActivity({
+        userId: req.user?.id || 1,
+        action: "SOFT_DELETE_DELIVERY_NOTE",
+        module: "INVOICE",
+        details: { invoice_id: id, delivery_note: result.rows[0].delivery_note }
+      });
+    } catch (actErr) {}
+
+    return success(res, "Delivery Note moved to Recycle Bin successfully");
+  } catch (err: any) {
+    console.error("DELETE DN ERROR:", err);
+    return error(res, err.message, 500);
+  }
+};
+
+// ==============================
+// DELETE COMPLETION CERTIFICATE (SOFT DELETE TO RECYCLE BIN)
+// ==============================
+export const deleteInvoiceCertificate = async (req: any, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const result = await pool.query(
+      `UPDATE invoices SET coc_deleted_at = NOW() WHERE id = $1 RETURNING id, coc_number`,
+      [id]
+    );
+    if (result.rowCount === 0) return error(res, "Invoice not found", 404);
+
+    try {
+      await createActivity({
+        userId: req.user?.id || 1,
+        action: "SOFT_DELETE_CERTIFICATE",
+        module: "INVOICE",
+        details: { invoice_id: id, coc_number: result.rows[0].coc_number }
+      });
+    } catch (actErr) {}
+
+    return success(res, "Completion Certificate moved to Recycle Bin successfully");
+  } catch (err: any) {
+    console.error("DELETE COC ERROR:", err);
+    return error(res, err.message, 500);
   }
 };
 
@@ -537,7 +583,18 @@ export const deleteInvoice = async (req: any, res: Response) => {
 // RESTORE INVOICE
 // ==============================
 export const restoreInvoice = async (req: any, res: Response) => {
-  return success(res, "Restore not implemented yet");
+  try {
+    const id = Number(req.params.id);
+    const result = await pool.query(
+      "UPDATE invoices SET deleted_at = NULL WHERE id = $1 RETURNING id, invoice_number",
+      [id]
+    );
+    if (result.rowCount === 0) return error(res, "Invoice not found", 404);
+    return success(res, "Invoice restored successfully", result.rows[0]);
+  } catch (err: any) {
+    console.error("RESTORE INVOICE ERROR:", err);
+    return error(res, err.message, 500);
+  }
 };
 
 // ==============================

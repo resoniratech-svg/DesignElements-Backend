@@ -107,6 +107,9 @@ pool.query("SELECT NOW()")
         ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_product TEXT;
         ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_remarks TEXT;
         ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_has_no_remarks BOOLEAN DEFAULT TRUE;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS dn_deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS coc_deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
         ALTER TABLE invoices ALTER COLUMN invoice_type TYPE VARCHAR(255);
         ALTER TABLE invoices ALTER COLUMN approval_status TYPE VARCHAR(255);
         ALTER TABLE invoices ALTER COLUMN invoice_number TYPE VARCHAR(255);
@@ -128,6 +131,7 @@ pool.query("SELECT NOW()")
     try {
       await pool.query(`
         ALTER TABLE quotations ADD COLUMN IF NOT EXISTS client_company VARCHAR(255);
+        ALTER TABLE quotations ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
       `);
       console.log("🌱 [DB INFO] Quotations table columns verified/migrated successfully.");
     } catch (quoErr) {

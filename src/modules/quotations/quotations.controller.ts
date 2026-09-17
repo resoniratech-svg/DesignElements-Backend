@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import pool from "../../config/db";
 import { validateCreditLimit } from "../../utils/creditService";
 import { createAuditLog } from "../../utils/auditService";
+import { createActivity } from "../activity/activity.service";
 
 // Helper for standardized responses
 const success = (res: Response, message: string, data?: any) => res.status(200).json({ success: true, message, data });
@@ -19,19 +20,19 @@ export const getQuotations = async (req: any, res: Response) => {
     const offset = (page - 1) * limit;
 
     const params: any[] = [];
-    let whereClause = "";
+    const whereConditions: string[] = ["q.deleted_at IS NULL"];
 
     if (req.user && req.user.role === 'CLIENT') {
       params.push(req.user.id);
-      whereClause = ` WHERE q.client_id = $${params.length}`;
+      whereConditions.push(`q.client_id = $${params.length}`);
     }
 
     if (division && division !== 'all') {
       params.push(division.toUpperCase());
-      whereClause = whereClause
-        ? `${whereClause} AND UPPER(q.division::TEXT) = $${params.length}`
-        : ` WHERE UPPER(q.division::TEXT) = $${params.length}`;
+      whereConditions.push(`UPPER(q.division::TEXT) = $${params.length}`);
     }
+
+    const whereClause = ` WHERE ${whereConditions.join(" AND ")}`;
 
     const countQuery = `
       SELECT COUNT(*) as count 
@@ -587,22 +588,32 @@ export const getNextQuotationNumber = async (req: Request, res: Response) => {
 };
 
 /**
- * DELETE QUOTATION
+ * DELETE QUOTATION (SOFT DELETE TO RECYCLE BIN)
  */
 export const deleteQuotation = async (req: any, res: Response) => {
   try {
     const { id } = req.params;
 
     // 1. Check if it exists
-    const checkRes = await pool.query(`SELECT id FROM quotations WHERE id::text = $1 OR qtn_number = $1`, [id]);
+    const checkRes = await pool.query(`SELECT id, qtn_number FROM quotations WHERE id::text = $1 OR qtn_number = $1`, [id]);
     if (checkRes.rows.length === 0) return error(res, "Quotation not found", 404);
 
     const targetId = checkRes.rows[0].id;
+    const qtnNumber = checkRes.rows[0].qtn_number;
 
-    // 2. Perform Delete
-    await pool.query(`DELETE FROM quotations WHERE id = $1`, [targetId]);
+    // 2. Perform Soft Delete
+    await pool.query(`UPDATE quotations SET deleted_at = NOW() WHERE id = $1`, [targetId]);
 
-    return success(res, "Quotation deleted successfully from database");
+    try {
+      await createActivity({
+        userId: req.user?.id || 1,
+        action: "SOFT_DELETE_QUOTATION",
+        module: "QUOTATION",
+        details: { quotation_id: targetId, qtn_number: qtnNumber }
+      });
+    } catch (auditErr) {}
+
+    return success(res, "Quotation moved to Recycle Bin successfully");
   } catch (err: any) {
     console.error("DELETE QUOTATION ERROR:", err.message);
     return error(res, "Failed to delete quotation");

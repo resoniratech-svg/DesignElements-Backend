@@ -34,6 +34,7 @@ import marketingRoutes from "./modules/leads/marketing.routes";
 import accountsRoutes from "./modules/accounts/accounts.routes";
 import proRoutes from "./modules/pro/pro.routes";
 import permissionsRoutes from "./modules/permissions/permissions.routes";
+import restoreRoutes from "./modules/restore/restore.routes";
 
 
 const app = express();
@@ -127,6 +128,7 @@ app.use("/api/accounts", accountsRoutes);
 app.use("/api/pro", proRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/permissions", permissionsRoutes);
+app.use("/api/restore", restoreRoutes);
 
 // marketing notifications fallback to stop console errors
 app.get("/api/marketing/notifications", (req, res) => {

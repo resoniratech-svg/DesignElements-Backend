@@ -7,6 +7,8 @@ import {
   getInvoiceById,
   updateInvoice,
   deleteInvoice,
+  deleteInvoiceDeliveryNote,
+  deleteInvoiceCertificate,
   restoreInvoice,
   updateInvoiceStatus,
   getOverdueInvoices,
@@ -61,12 +63,28 @@ router.put(
   updateInvoice
 );
 
-// Delete Invoice
+// Delete Invoice (Soft Delete)
 router.delete(
   "/:id",
   authMiddleware,
   checkRole(["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER", "DIRECTOR"]),
   deleteInvoice
+);
+
+// Delete Delivery Note (Soft Delete)
+router.delete(
+  "/:id/delivery-note",
+  authMiddleware,
+  checkRole(["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER", "DIRECTOR"]),
+  deleteInvoiceDeliveryNote
+);
+
+// Delete Completion Certificate (Soft Delete)
+router.delete(
+  "/:id/certificate",
+  authMiddleware,
+  checkRole(["SUPER_ADMIN", "ACCOUNTS", "PROJECT_MANAGER", "DIRECTOR"]),
+  deleteInvoiceCertificate
 );
 
 // Restore Invoice
