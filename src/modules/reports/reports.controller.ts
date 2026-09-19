@@ -19,7 +19,7 @@ export const getOutstandingInvoices = async (req: Request, res: Response) => {
         status,
         due_date
        FROM invoices
-       WHERE status != 'PAID'
+       WHERE status != 'PAID' AND deleted_at IS NULL
        ORDER BY due_date ASC`
     );
 
@@ -48,6 +48,7 @@ export const revenueReport = async (req: Request, res: Response) => {
       FROM invoices i
       LEFT JOIN payments p
       ON i.id = p.invoice_id
+      WHERE i.deleted_at IS NULL
     `);
 
     // Convert NUMERIC strings → numbers

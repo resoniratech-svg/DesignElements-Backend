@@ -13,6 +13,7 @@ export const createExpense = async (req: any, res: Response) => {
   try {
     const {
       category,
+      department,
       description,
       totalAmount,
       date,
@@ -65,10 +66,10 @@ export const createExpense = async (req: any, res: Response) => {
     // 🔹 Insert expense — Rule 2: always starts as PENDING until approved by Accountant/Admin
     const result = await client.query(
       `INSERT INTO internal_expenses
-      (category, description, total_amount, date, allocation_type, approval_status, vendor, payment_method, tax_rate, tax_amount, reference_id, attachment, notes, user_id, expense_type)
-      VALUES ($1,$2,$3,$4,$5,'PENDING_APPROVAL',$6,$7,$8,$9,$10,$11,$12,$13,$14)
+      (category, department, description, total_amount, date, allocation_type, approval_status, vendor, payment_method, tax_rate, tax_amount, reference_id, attachment, notes, user_id, expense_type)
+      VALUES ($1,$2,$3,$4,$5,$6,'PENDING_APPROVAL',$7,$8,$9,$10,$11,$12,$13,$14,$15)
       RETURNING *`,
-      [category, description, totalAmount, date, allocationType, vendor, paymentMethod, taxRate || 0, taxAmount || 0, referenceId || null, attachment, notes, req.user?.id, expenseType || null]
+      [category, department || null, description, totalAmount, date, allocationType, vendor, paymentMethod, taxRate || 0, taxAmount || 0, referenceId || null, attachment, notes, req.user?.id, expenseType || null]
     );
 
     const expense = result.rows[0];
@@ -221,6 +222,7 @@ export const updateExpense = async (req: any, res: Response) => {
     const { expenseId } = req.params as { expenseId: string };
     const {
       category,
+      department,
       description,
       totalAmount,
       date,
@@ -262,6 +264,7 @@ export const updateExpense = async (req: any, res: Response) => {
     };
 
     if (category !== undefined) addField("category", category || null);
+    if (department !== undefined) addField("department", department || null);
     if (description !== undefined) addField("description", description || null);
     if (totalAmount !== undefined) addField("total_amount", totalAmount !== null ? Number(totalAmount) : null);
     if (date !== undefined) addField("date", date || null);

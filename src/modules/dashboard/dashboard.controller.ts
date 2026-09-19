@@ -33,7 +33,7 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
 
     // 1. Receivables (Unpaid Invoices)
     const receivablesRes = await runQuery("Receivables", 
-      `SELECT COALESCE(SUM(balance_amount), 0) as total FROM invoices WHERE UPPER(status::TEXT) != 'PAID'${divisionFilter}`,
+      `SELECT COALESCE(SUM(balance_amount), 0) as total FROM invoices WHERE UPPER(status::TEXT) != 'PAID' AND deleted_at IS NULL${divisionFilter}`,
       params
     );
 
@@ -63,7 +63,7 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
 
     // 4. Total Revenue
     const revenueRes = await runQuery("TotalRevenue",
-      `SELECT COALESCE(SUM(total_amount), 0) as total FROM invoices WHERE 1=1${divisionFilter}`,
+      `SELECT COALESCE(SUM(total_amount), 0) as total FROM invoices WHERE 1=1 AND deleted_at IS NULL${divisionFilter}`,
       params
     );
 
@@ -90,7 +90,7 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
     const recentInvoicesRes = await runQuery("RecentInvoices", `
       SELECT i.invoice_number, i.client_name as client, i.total_amount, i.status, i.division
       FROM invoices i
-      WHERE 1=1 ${division && division !== 'all' ? 'AND UPPER(i.division::TEXT) = UPPER($1)' : ''}
+      WHERE i.deleted_at IS NULL ${division && division !== 'all' ? 'AND UPPER(i.division::TEXT) = UPPER($1)' : ''}
       ORDER BY i.created_at DESC
       LIMIT 5
     `, division && division !== 'all' ? [division] : []);
@@ -133,7 +133,7 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
     const pendingPaymentsRes = await runQuery("PendingPaymentsList", `
       SELECT i.id, i.invoice_number as "invoiceNo", i.client_name as client, i.total_amount as amount, i.status, i.division, i.created_at
       FROM invoices i
-      WHERE i.balance_amount > 0 ${division && division !== 'all' ? 'AND UPPER(i.division::TEXT) = UPPER($1)' : ''}
+      WHERE i.balance_amount > 0 AND i.deleted_at IS NULL ${division && division !== 'all' ? 'AND UPPER(i.division::TEXT) = UPPER($1)' : ''}
       ORDER BY i.created_at DESC
       LIMIT 5
     `, division && division !== 'all' ? [division] : []);

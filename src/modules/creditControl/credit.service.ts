@@ -3,7 +3,7 @@ import { Invoice, InvoiceStatus } from "../../types/erp";
 import { postBalancedLedgerEntry } from "../../services/ledger.service";
 
 export const getCreditSummaryService = async (divisionId?: string) => {
-  const whereClause = divisionId ? "WHERE i.division = $1" : "";
+  const whereClause = divisionId ? "WHERE i.division = $1 AND i.deleted_at IS NULL" : "WHERE i.deleted_at IS NULL";
   const params = divisionId ? [divisionId] : [];
 
   const result = await pool.query(`
@@ -35,7 +35,7 @@ export const getInvoicesService = async (filters: any, divisionId?: string) => {
     SELECT i.*, u.name as client_name 
     FROM invoices i
     LEFT JOIN users u ON i.client_id = u.id
-    WHERE 1=1
+    WHERE i.deleted_at IS NULL
   `;
   const params: any[] = [];
 
@@ -67,7 +67,10 @@ export const getInvoicesService = async (filters: any, divisionId?: string) => {
   params.push(limit ?? 10, offset ?? 0);
 
   const result = await pool.query(query, params);
-  const countResult = await pool.query(`SELECT COUNT(*) FROM invoices ${divisionId ? 'WHERE division = $1' : ''}`, divisionId ? [divisionId] : []);
+  const countResult = await pool.query(
+    `SELECT COUNT(*) FROM invoices WHERE deleted_at IS NULL ${divisionId ? 'AND division = $1' : ''}`,
+    divisionId ? [divisionId] : []
+  );
 
   return {
     invoices: result.rows,
@@ -87,7 +90,7 @@ export const addPaymentService = async (invoiceId: number, amount: number, divis
       `SELECT i.total_amount, i.amount_paid, i.balance_amount, i.client_id, c.credit_limit, i.invoice_number, c.id as valid_client_id
        FROM invoices i 
        LEFT JOIN clients c ON i.client_id = c.id
-       WHERE i.id = $1 AND i.division = $2 FOR UPDATE`,
+       WHERE i.id = $1 AND i.division = $2 AND i.deleted_at IS NULL FOR UPDATE`,
       [invoiceId, divisionId]
     );
 
@@ -113,7 +116,7 @@ export const addPaymentService = async (invoiceId: number, amount: number, divis
     let approvalStatus = 'approved';
     if (invoice.valid_client_id) {
       const clientBalanceRes = await client.query(
-        'SELECT SUM(balance_amount) as total_outstanding FROM invoices WHERE client_id = $1',
+        'SELECT SUM(balance_amount) as total_outstanding FROM invoices WHERE client_id = $1 AND deleted_at IS NULL',
         [invoice.client_id]
       );
       const currentClientOutstanding = Number(clientBalanceRes.rows[0].total_outstanding) - Number(amount); // Subtract current payment from total
