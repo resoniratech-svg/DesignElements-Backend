@@ -381,10 +381,10 @@ export const updateQuotation = async (req: any, res: Response) => {
       return success(res, "Quotation status updated successfully", statusRes.rows[0]);
     }
 
-    // 2. Full Edit: Generate NEW revision number or use custom qtn_number (preserving oldRecord untouched)
-    const newQtnNumber = (qtn_number && qtn_number.trim() && qtn_number.trim() !== oldRecord.qtn_number)
+    // 2. Full Edit: Use user's manual qtn_number or preserve existing qtn_number without auto-generating revision suffixes
+    const finalQtnNumber = (qtn_number && qtn_number.trim())
       ? qtn_number.trim()
-      : await generateNextQuotationRevision(client, oldRecord.qtn_number);
+      : oldRecord.qtn_number;
 
     let target_user_id = client_id || oldRecord.client_id;
     if (target_user_id) {
@@ -397,104 +397,203 @@ export const updateQuotation = async (req: any, res: Response) => {
     const final_status = (status || oldRecord.status || 'PENDING_APPROVAL').toUpperCase();
     const final_division = (division || oldRecord.division || 'CONTRACTING').toUpperCase().trim();
 
-    const insertQuery = `
-      INSERT INTO quotations (
-        qtn_number,
-        client_id,
-        division,
-        total_amount,
-        status,
-        items,
-        valid_until,
-        terms,
-        project_name,
-        client_name,
-        client_company,
-        attn,
-        attn_designation,
-        salutation,
-        reference_no,
-        intro_text,
-        tc_terms,
-        tc_payment,
-        tc_delivery,
-        tc_installation,
-        tc_validity,
-        outro_text,
-        salesman,
-        salesman_designation,
-        salesman_phone,
-        salesman_email,
-        client_phone,
-        client_email,
-        selected_format,
-        discount,
-        created_at,
-        updated_at
-      ) VALUES (
-        $1, $2, $3::division_type, $4, $5::approval_status, $6::jsonb, $7, $8, $9, $10,
-        $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-        $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-        COALESCE($31::timestamp, NOW()), NOW()
-      )
-      RETURNING *
-    `;
+    // 2. Full Edit: Smart Revision Logic
+    // - If quote ID is the same as before -> Update existing record in-place
+    // - If user entered a new Quote ID -> Keep old record untouched and insert new revision record
+    const isNewRevision = finalQtnNumber !== oldRecord.qtn_number;
 
-    const values = [
-      newQtnNumber,
-      target_user_id || null,
-      final_division,
-      total_amount !== undefined ? total_amount : oldRecord.total_amount,
-      final_status,
-      JSON.stringify(items || oldRecord.items || []),
-      valid_until ? new Date(valid_until).toISOString() : (oldRecord.valid_until ? new Date(oldRecord.valid_until).toISOString() : null),
-      terms !== undefined ? terms : (oldRecord.terms || ''),
-      project_name || oldRecord.project_name || '',
-      client_name || oldRecord.client_name || '',
-      client_company !== undefined ? client_company : (oldRecord.client_company || ''),
-      attn !== undefined ? attn : oldRecord.attn,
-      attn_designation !== undefined ? attn_designation : oldRecord.attn_designation,
-      salutation !== undefined ? salutation : oldRecord.salutation,
-      reference_no !== undefined ? reference_no : oldRecord.reference_no,
-      intro_text !== undefined ? intro_text : oldRecord.intro_text,
-      tc_terms !== undefined ? tc_terms : oldRecord.tc_terms,
-      tc_payment !== undefined ? tc_payment : oldRecord.tc_payment,
-      tc_delivery !== undefined ? tc_delivery : oldRecord.tc_delivery,
-      tc_installation !== undefined ? tc_installation : oldRecord.tc_installation,
-      tc_validity !== undefined ? tc_validity : oldRecord.tc_validity,
-      outro_text !== undefined ? outro_text : oldRecord.outro_text,
-      salesman !== undefined ? salesman : oldRecord.salesman,
-      salesman_designation !== undefined ? salesman_designation : oldRecord.salesman_designation,
-      salesman_phone !== undefined ? salesman_phone : oldRecord.salesman_phone,
-      salesman_email !== undefined ? salesman_email : oldRecord.salesman_email,
-      client_phone !== undefined ? client_phone : oldRecord.client_phone,
-      client_email !== undefined ? client_email : oldRecord.client_email,
-      selected_format || oldRecord.selected_format || 'quotation1',
-      discount !== undefined ? Number(discount) : Number(oldRecord.discount || 0),
-      created_at ? new Date(created_at).toISOString() : null
-    ];
+    let savedQuotation;
 
-    const result = await client.query(insertQuery, values);
-    const newQuotation = result.rows[0];
+    if (isNewRevision) {
+      const insertQuery = `
+        INSERT INTO quotations (
+          qtn_number,
+          client_id,
+          division,
+          total_amount,
+          status,
+          items,
+          valid_until,
+          terms,
+          project_name,
+          client_name,
+          client_company,
+          attn,
+          attn_designation,
+          salutation,
+          reference_no,
+          intro_text,
+          tc_terms,
+          tc_payment,
+          tc_delivery,
+          tc_installation,
+          tc_validity,
+          outro_text,
+          salesman,
+          salesman_designation,
+          salesman_phone,
+          salesman_email,
+          client_phone,
+          client_email,
+          selected_format,
+          discount,
+          created_at,
+          updated_at
+        ) VALUES (
+          $1, $2, $3::division_type, $4, $5::approval_status, $6::jsonb, $7, $8, $9, $10,
+          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+          $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
+          COALESCE($31::timestamp, NOW()), NOW()
+        )
+        RETURNING *
+      `;
 
-    // Log Audit
-    try {
-      if (req.user) {
-        await createAuditLog(client, {
-          userId: req.user.id,
-          action: "REVISION_CREATED",
-          entityType: "QUOTATION",
-          entityId: newQuotation.id,
-          oldValue: { qtn_number: oldRecord.qtn_number },
-          newValue: { qtn_number: newQuotation.qtn_number }
-        });
+      const values = [
+        finalQtnNumber,
+        target_user_id || null,
+        final_division,
+        total_amount !== undefined ? total_amount : oldRecord.total_amount,
+        final_status,
+        JSON.stringify(items || oldRecord.items || []),
+        valid_until ? new Date(valid_until).toISOString() : (oldRecord.valid_until ? new Date(oldRecord.valid_until).toISOString() : null),
+        terms !== undefined ? terms : (oldRecord.terms || ''),
+        project_name || oldRecord.project_name || '',
+        client_name || oldRecord.client_name || '',
+        client_company !== undefined ? client_company : (oldRecord.client_company || ''),
+        attn !== undefined ? attn : oldRecord.attn,
+        attn_designation !== undefined ? attn_designation : oldRecord.attn_designation,
+        salutation !== undefined ? salutation : oldRecord.salutation,
+        reference_no !== undefined ? reference_no : oldRecord.reference_no,
+        intro_text !== undefined ? intro_text : oldRecord.intro_text,
+        tc_terms !== undefined ? tc_terms : oldRecord.tc_terms,
+        tc_payment !== undefined ? tc_payment : oldRecord.tc_payment,
+        tc_delivery !== undefined ? tc_delivery : oldRecord.tc_delivery,
+        tc_installation !== undefined ? tc_installation : oldRecord.tc_installation,
+        tc_validity !== undefined ? tc_validity : oldRecord.tc_validity,
+        outro_text !== undefined ? outro_text : oldRecord.outro_text,
+        salesman !== undefined ? salesman : oldRecord.salesman,
+        salesman_designation !== undefined ? salesman_designation : oldRecord.salesman_designation,
+        salesman_phone !== undefined ? salesman_phone : oldRecord.salesman_phone,
+        salesman_email !== undefined ? salesman_email : oldRecord.salesman_email,
+        client_phone !== undefined ? client_phone : oldRecord.client_phone,
+        client_email !== undefined ? client_email : oldRecord.client_email,
+        selected_format || oldRecord.selected_format || 'quotation1',
+        discount !== undefined ? Number(discount) : Number(oldRecord.discount || 0),
+        created_at ? new Date(created_at).toISOString() : null
+      ];
+
+      const result = await client.query(insertQuery, values);
+      savedQuotation = result.rows[0];
+
+      try {
+        if (req.user) {
+          await createAuditLog(client, {
+            userId: req.user.id,
+            action: "REVISION_CREATED",
+            entityType: "QUOTATION",
+            entityId: savedQuotation.id,
+            oldValue: { qtn_number: oldRecord.qtn_number },
+            newValue: { qtn_number: savedQuotation.qtn_number }
+          });
+        }
+      } catch (auditErr: any) {
+        console.error(`[AUDIT_LOG_ERROR] Failed to log revision for ${finalQtnNumber}:`, auditErr.message);
       }
-    } catch (auditErr: any) {
-      console.error(`[AUDIT_LOG_ERROR] Failed to log revision for ${newQtnNumber}:`, auditErr.message);
+    } else {
+      const updateQuery = `
+        UPDATE quotations SET
+          qtn_number = $1,
+          client_id = $2,
+          division = $3::division_type,
+          total_amount = $4,
+          status = $5::approval_status,
+          items = $6::jsonb,
+          valid_until = $7,
+          terms = $8,
+          project_name = $9,
+          client_name = $10,
+          client_company = $11,
+          attn = $12,
+          attn_designation = $13,
+          salutation = $14,
+          reference_no = $15,
+          intro_text = $16,
+          tc_terms = $17,
+          tc_payment = $18,
+          tc_delivery = $19,
+          tc_installation = $20,
+          tc_validity = $21,
+          outro_text = $22,
+          salesman = $23,
+          salesman_designation = $24,
+          salesman_phone = $25,
+          salesman_email = $26,
+          client_phone = $27,
+          client_email = $28,
+          selected_format = $29,
+          discount = $30,
+          created_at = COALESCE($31::timestamp, created_at),
+          updated_at = NOW()
+        WHERE id = $32
+        RETURNING *
+      `;
+
+      const values = [
+        finalQtnNumber,
+        target_user_id || null,
+        final_division,
+        total_amount !== undefined ? total_amount : oldRecord.total_amount,
+        final_status,
+        JSON.stringify(items || oldRecord.items || []),
+        valid_until ? new Date(valid_until).toISOString() : (oldRecord.valid_until ? new Date(oldRecord.valid_until).toISOString() : null),
+        terms !== undefined ? terms : (oldRecord.terms || ''),
+        project_name || oldRecord.project_name || '',
+        client_name || oldRecord.client_name || '',
+        client_company !== undefined ? client_company : (oldRecord.client_company || ''),
+        attn !== undefined ? attn : oldRecord.attn,
+        attn_designation !== undefined ? attn_designation : oldRecord.attn_designation,
+        salutation !== undefined ? salutation : oldRecord.salutation,
+        reference_no !== undefined ? reference_no : oldRecord.reference_no,
+        intro_text !== undefined ? intro_text : oldRecord.intro_text,
+        tc_terms !== undefined ? tc_terms : oldRecord.tc_terms,
+        tc_payment !== undefined ? tc_payment : oldRecord.tc_payment,
+        tc_delivery !== undefined ? tc_delivery : oldRecord.tc_delivery,
+        tc_installation !== undefined ? tc_installation : oldRecord.tc_installation,
+        tc_validity !== undefined ? tc_validity : oldRecord.tc_validity,
+        outro_text !== undefined ? outro_text : oldRecord.outro_text,
+        salesman !== undefined ? salesman : oldRecord.salesman,
+        salesman_designation !== undefined ? salesman_designation : oldRecord.salesman_designation,
+        salesman_phone !== undefined ? salesman_phone : oldRecord.salesman_phone,
+        salesman_email !== undefined ? salesman_email : oldRecord.salesman_email,
+        client_phone !== undefined ? client_phone : oldRecord.client_phone,
+        client_email !== undefined ? client_email : oldRecord.client_email,
+        selected_format || oldRecord.selected_format || 'quotation1',
+        discount !== undefined ? Number(discount) : Number(oldRecord.discount || 0),
+        created_at ? new Date(created_at).toISOString() : null,
+        oldRecord.id
+      ];
+
+      const result = await client.query(updateQuery, values);
+      savedQuotation = result.rows[0];
+
+      try {
+        if (req.user) {
+          await createAuditLog(client, {
+            userId: req.user.id,
+            action: "QUOTATION_UPDATED",
+            entityType: "QUOTATION",
+            entityId: savedQuotation.id,
+            oldValue: { qtn_number: oldRecord.qtn_number },
+            newValue: { qtn_number: savedQuotation.qtn_number }
+          });
+        }
+      } catch (auditErr: any) {
+        console.error(`[AUDIT_LOG_ERROR] Failed to log quotation update for ${finalQtnNumber}:`, auditErr.message);
+      }
     }
 
     await client.query("COMMIT");
-    return success(res, "Quotation revision created successfully", newQuotation);
+    return success(res, isNewRevision ? "Quotation revision created successfully" : "Quotation updated successfully", savedQuotation);
   } catch (err: any) {
     await client.query("ROLLBACK");
     console.error("UPDATE QUOTATION ERROR:", err.message);
