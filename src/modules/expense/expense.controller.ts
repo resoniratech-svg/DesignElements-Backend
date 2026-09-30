@@ -149,6 +149,8 @@ export const getExpenses = async (req: Request, res: Response) => {
 
     const result = await pool.query(
       `SELECT e.*,
+        p.project_name,
+        p.project_id as project_code,
         COALESCE(
           json_agg(
             json_build_object(
@@ -161,8 +163,9 @@ export const getExpenses = async (req: Request, res: Response) => {
         ) as allocations
        FROM internal_expenses e
        LEFT JOIN expense_allocations ea ON ea.expense_id = e.id
+       LEFT JOIN projects p ON (e.reference_id ~ '^[0-9]+$' AND e.reference_id::INTEGER = p.id) OR (e.reference_id = p.project_id)
        WHERE e.is_deleted = false
-       GROUP BY e.id
+       GROUP BY e.id, p.project_name, p.project_id
        ORDER BY e.created_at DESC
        LIMIT $1 OFFSET $2`,
       [limitNumber, offset]
@@ -184,6 +187,8 @@ export const getExpenseById = async (req: Request, res: Response) => {
 
     const result = await pool.query(
       `SELECT e.*,
+        p.project_name,
+        p.project_id as project_code,
         COALESCE(
           json_agg(
             json_build_object(
@@ -196,8 +201,9 @@ export const getExpenseById = async (req: Request, res: Response) => {
         ) as allocations
        FROM internal_expenses e
        LEFT JOIN expense_allocations ea ON ea.expense_id = e.id
+       LEFT JOIN projects p ON (e.reference_id ~ '^[0-9]+$' AND e.reference_id::INTEGER = p.id) OR (e.reference_id = p.project_id)
        WHERE e.id = $1 AND e.is_deleted = false
-       GROUP BY e.id`,
+       GROUP BY e.id, p.project_name, p.project_id`,
       [expenseId]
     );
 
