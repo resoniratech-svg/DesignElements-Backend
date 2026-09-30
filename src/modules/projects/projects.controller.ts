@@ -6,6 +6,7 @@ import { AccessGuard } from "../../services/accessGuard.service";
 export const createProject = async (req: Request, res: Response) => {
   try {
     const {
+      project_id,
       client_id,
       client_name,
       project_name,
@@ -50,10 +51,11 @@ export const createProject = async (req: Request, res: Response) => {
 
     const result = await pool.query(
       `INSERT INTO projects
-      (client_id, client_name, project_name, contract_value, start_date, end_date, manager, manager_id, description, division, status, uploaded_document)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      (project_id, client_id, client_name, project_name, contract_value, start_date, end_date, manager, manager_id, description, division, status, uploaded_document)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
       RETURNING *`,
       [
+        project_id || null,
         target_user_id || null,
         client_name || null,
         project_name,
@@ -125,6 +127,7 @@ export const getProjects = async (req: Request, res: Response) => {
     let query = `
       SELECT
         p.id,
+        p.project_id,
         p.client_id,
         COALESCE(NULLIF(p.client_name, ''), c.contact_person, u.name) as client_name,
         COALESCE(u.company_name, c.name, p.client_name) as client_company,
@@ -177,6 +180,7 @@ export const getProjectById = async (req: Request, res: Response) => {
     let query = `
       SELECT
         p.id,
+        p.project_id,
         p.client_id,
         u.name as client_name,
         p.project_name,
@@ -221,6 +225,7 @@ export const updateProject = async (req: Request, res: Response) => {
     const { id } = req.params;
     console.log("UPDATE PROJECT ID:", id, "BODY:", req.body);
     const {
+      project_id,
       project_name,
       client_name,
       client_id,
@@ -276,6 +281,7 @@ export const updateProject = async (req: Request, res: Response) => {
       paramIndex++;
     };
 
+    if (project_id !== undefined) addField("project_id", project_id || null);
     if (project_name !== undefined) addField("project_name", project_name || null);
     if (client_name !== undefined) addField("client_name", client_name || null);
     if (client_id !== undefined) addField("client_id", target_user_id);

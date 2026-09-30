@@ -165,17 +165,17 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
     const divisionPerformanceRes = await runQuery("DivisionPerformance", `
       WITH divisions_list AS (
         SELECT DISTINCT division FROM (
-          SELECT division::TEXT FROM invoices
+          SELECT division::TEXT FROM invoices WHERE deleted_at IS NULL
           UNION
           SELECT division::TEXT FROM projects
           UNION
-          SELECT ea.division::TEXT FROM internal_expenses e JOIN expense_allocations ea ON ea.expense_id = e.id
+          SELECT ea.division::TEXT FROM internal_expenses e JOIN expense_allocations ea ON ea.expense_id = e.id WHERE e.is_deleted = false
         ) d(division) WHERE division IS NOT NULL AND UPPER(division) != 'SERVICE'
       ),
       sector_revenue AS (
         SELECT division, COALESCE(SUM(total_amount), 0) as revenue
         FROM invoices
-        WHERE balance_amount = 0
+        WHERE balance_amount = 0 AND deleted_at IS NULL AND UPPER(status::TEXT) = 'PAID'
         GROUP BY division
       ),
       sector_expenses AS (
@@ -230,7 +230,7 @@ export const getAdminDashboardStats = async (req: any, res: Response) => {
           DATE_TRUNC('month', invoice_date) as sort_month,
           SUM(total_amount) as revenue
         FROM invoices
-        WHERE balance_amount = 0
+        WHERE balance_amount = 0 AND deleted_at IS NULL AND UPPER(status::TEXT) = 'PAID'
         ${trendDivisionFilter}
         GROUP BY month, sort_month
       ),

@@ -142,6 +142,7 @@ pool.query("SELECT NOW()")
     try {
       await pool.query(`
         ALTER TABLE projects ADD COLUMN IF NOT EXISTS client_name VARCHAR(255);
+        ALTER TABLE projects ADD COLUMN IF NOT EXISTS project_id VARCHAR(255);
       `);
       console.log("🌱 [DB INFO] Projects table columns verified/migrated successfully.");
     } catch (projErr) {
