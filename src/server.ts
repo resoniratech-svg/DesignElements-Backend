@@ -152,7 +152,17 @@ pool.query("SELECT NOW()")
     // Ensure internal_expenses table has all required columns
     try {
       await pool.query(`
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS department VARCHAR(255);
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS vendor VARCHAR(255);
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS payment_method VARCHAR(255);
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS tax_rate NUMERIC(10, 2) DEFAULT 0;
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS tax_amount NUMERIC(15, 2) DEFAULT 0;
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS reference_id VARCHAR(255);
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS attachment TEXT;
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS notes TEXT;
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS expense_type VARCHAR(50);
         ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS is_central BOOLEAN DEFAULT FALSE;
+        ALTER TABLE internal_expenses ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
       `);
       console.log("🌱 [DB INFO] internal_expenses table columns verified/migrated successfully.");
     } catch (expErr) {

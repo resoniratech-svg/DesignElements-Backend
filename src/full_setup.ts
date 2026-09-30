@@ -288,6 +288,7 @@ const initializeDatabase = async () => {
       CREATE TABLE IF NOT EXISTS internal_expenses (
         id SERIAL PRIMARY KEY,
         category VARCHAR(100),
+        department VARCHAR(255),
         description TEXT,
         total_amount DECIMAL(15, 2) NOT NULL,
         date DATE,
